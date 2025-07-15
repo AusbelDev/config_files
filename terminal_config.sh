@@ -43,7 +43,7 @@ log "Updating system..."
 sudo apt update && sudo apt upgrade -y
 
 # Install required packages
-for pkg in sudo wget curl zsh git lsd fontconfig unzip; do
+for pkg in sudo wget curl zsh git lsd fontconfig unzip bat; do
     install_package "$pkg"
 done
 
@@ -67,6 +67,11 @@ add_zshrc_once 'HISTSIZE=10000'
 add_zshrc_once 'SAVEHIST=10000'
 add_zshrc_once 'setopt appendhistory'
 
+#alias adding
+add_zshrc_once 'alias bat="batcat"'
+add_zshrc_once 'alias clr="clear"'
+add_zshrc_once 'alias py="python3"'
+add_zshrc_once 'alias ls="ls -la"'
 # Zap Zsh plugin manager
 if [ ! -d "$HOME/.local/share/zap" ]; then
     log "Installing Zap..."
@@ -76,6 +81,7 @@ add_zshrc_once '[ -f "$HOME/.local/share/zap/zap.zsh" ] && source "$HOME/.local/
 
 # Zap plugins
 add_zshrc_once 'plug "romkatv/powerlevel10k"'
+add_zshrc_once 'plug "zap-zsh/supercharge"'
 add_zshrc_once 'plug "wintermi/zsh-lsd"'
 add_zshrc_once 'plug "zsh-users/zsh-syntax-highlighting"'
 add_zshrc_once 'plug "zsh-users/zsh-history-substring-search"'
