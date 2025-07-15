@@ -43,23 +43,23 @@ log "Updating system..."
 sudo apt update && sudo apt upgrade -y
 
 # Install required packages
-for pkg in sudo wget curl zsh git lsd; do
+for pkg in sudo wget curl zsh git lsd fontconfig unzip; do
     install_package "$pkg"
 done
 
 # Set zsh as default shell
 if [ "$SHELL" != "/usr/bin/zsh" ]; then
     log "Setting Zsh as default shell..."
-    chsh -s /usr/bin/zsh
+    chsh -s /usr/bin/zsh $USER
 fi
 
 # Install FZF
 if [ ! -d "$HOME/.fzf" ]; then
     log "Installing fzf..."
     git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
-    ~/.fzf/install --key-bindings --completion --no-update-rc
+    ~/.fzf/install
 fi
-add_zshrc_once 'source ~/.fzf.zsh'
+echo 'source <(fzf --zsh)' >> .zshrc
 
 # History settings
 add_zshrc_once 'HISTFILE=~/.zsh_history'
@@ -80,6 +80,24 @@ add_zshrc_once 'plug "wintermi/zsh-lsd"'
 add_zshrc_once 'plug "zsh-users/zsh-syntax-highlighting"'
 add_zshrc_once 'plug "zsh-users/zsh-history-substring-search"'
 add_zshrc_once 'plug "Aloxaf/fzf-tab"'
+add_zshrc_once 'plug "zsh-users/zsh-autosuggestions"'
+
+# Install Nerd Font: JetBrainsMono
+FONT_DIR="$HOME/.local/share/fonts"
+FONT_ZIP="FiraMono.zip"
+FONT_URL="https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/$FONT_ZIP"
+
+mkdir -p "$FONT_DIR"
+if [ ! -f "$FONT_DIR/FiraMonoNerdFont-Regular.ttf" ]; then
+    log "Installing FiraMono Nerd Font..."
+    wget -q --show-progress -P "$FONT_DIR" "$FONT_URL"
+    cd "$FONT_DIR"
+    unzip -o "$FONT_ZIP"
+    rm "$FONT_ZIP"
+    fc-cache -fv
+else
+    log "FiraMono Nerd Font already installed."
+fi
 
 log "Setup complete! Starting Zsh..."
 exec zsh
