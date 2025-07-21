@@ -66,6 +66,9 @@ add_zshrc_once 'HISTFILE=~/.zsh_history'
 add_zshrc_once 'HISTSIZE=10000'
 add_zshrc_once 'SAVEHIST=10000'
 add_zshrc_once 'setopt appendhistory'
+add_zshrc_once 'setopt sharehistory'
+add_zshrc_once 'setopt appendhistory'
+add_zshrc_once 'setopt incappendhistory'
 
 #alias adding
 add_zshrc_once 'alias bat="batcat"'
@@ -86,6 +89,7 @@ add_zshrc_once 'plug "wintermi/zsh-lsd"'
 add_zshrc_once 'plug "zsh-users/zsh-syntax-highlighting"'
 add_zshrc_once 'plug "zsh-users/zsh-history-substring-search"'
 add_zshrc_once 'plug "Aloxaf/fzf-tab"'
+add_zshrc_once 'plug "Freed-Wu/fzf-tab-source"'
 add_zshrc_once 'plug "zsh-users/zsh-autosuggestions"'
 
 # Install Nerd Font: JetBrainsMono
