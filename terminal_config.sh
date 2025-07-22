@@ -67,7 +67,6 @@ add_zshrc_once 'HISTSIZE=10000'
 add_zshrc_once 'SAVEHIST=10000'
 add_zshrc_once 'setopt appendhistory'
 add_zshrc_once 'setopt sharehistory'
-add_zshrc_once 'setopt appendhistory'
 add_zshrc_once 'setopt incappendhistory'
 
 #alias adding
