@@ -3,6 +3,7 @@
 set -e  # Exit on error
 set -u  # Treat unset variables as error
 
+
 # Colors
 GREEN="\e[32m"
 RED="\e[31m"
