@@ -1,0 +1,69 @@
+name: Test Terminal Setup Script
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test-setup:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Make script executable
+        run: chmod +x setup_terminal.sh
+
+      - name: Run setup script
+        run: |
+          export CI=true
+          ./setup_terminal.sh
+
+      - name: Verify core commands
+        run: |
+          for cmd in zsh git curl unzip lsd bat; do
+            if ! command -v "$cmd" &>/dev/null; then
+              echo "❌ $cmd not found"
+              exit 1
+            else
+              echo "✅ $cmd installed"
+            fi
+          done
+
+      - name: Verify fzf installation
+        run: |
+          if ! command -v fzf &>/dev/null; then
+            echo "❌ fzf not installed"
+            exit 1
+          else
+            echo "✅ fzf installed"
+          fi
+
+      - name: Verify Zsh plugins
+        run: |
+          ZAP_DIR="$HOME/.local/share/zap"
+          if [ ! -d "$ZAP_DIR" ]; then
+            echo "❌ Zap Zsh plugin manager not installed"
+            exit 1
+          fi
+
+          REQUIRED_PLUGINS=("romkatv/powerlevel10k" "zsh-users/zsh-syntax-highlighting" "zsh-users/zsh-autosuggestions")
+          for plugin in "${REQUIRED_PLUGINS[@]}"; do
+            if ! grep -q "$plugin" "$HOME/.zshrc"; then
+              echo "❌ Plugin $plugin not found in .zshrc"
+              exit 1
+            else
+              echo "✅ Plugin $plugin found in .zshrc"
+            fi
+          done
+
+      - name: Upload .zshrc as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: zshrc-${{ matrix.os }}
+          path: ~/.zshrc
