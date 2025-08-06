@@ -118,7 +118,7 @@ if [ ! -d "$HOME/.fzf" ]; then
     log "Installing fzf..."
     git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
     if [ "$IS_CI" = true ]; then
-        ~/.fzf/install --no-bash --no-fish --no-update-rc
+        ~/.fzf/install --all
     else
         ~/.fzf/install --all
     fi
