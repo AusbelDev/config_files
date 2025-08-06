@@ -82,13 +82,15 @@ install_package() {
 }
 
 # Update system
-log "Updating system..."
-case "$PACKAGE_MANAGER" in
-    apt) sudo apt update && sudo apt upgrade -y ;;
-    dnf) sudo dnf upgrade -y ;;
-    pacman) sudo pacman -Syu --noconfirm ;;
-    brew) brew update ;;
-esac
+if [ "$IS_CI" = false ]; then
+    log "Updating system..."
+    case "$PACKAGE_MANAGER" in
+        apt) sudo apt update && sudo apt upgrade -y ;;
+        dnf) sudo dnf upgrade -y ;;
+        pacman) sudo pacman -Syu --noconfirm ;;
+        brew) brew update ;;
+    esac
+fi
 
 # Install required packages
 REQUIRED_PKGS=(zsh git curl unzip)
