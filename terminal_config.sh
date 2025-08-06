@@ -124,6 +124,7 @@ if [ ! -d "$HOME/.fzf" ]; then
         echo '[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh' >> "$HOME/.zshrc"
     elif [ "$PACKAGE_MANAGER" = "brew" ] && ["$IS_CI" = true ]; then
         brew install fzf
+        source ~/.fzf.zsh
     fi
 fi
 
