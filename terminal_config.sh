@@ -121,11 +121,12 @@ if [ ! -d "$HOME/.fzf" ]; then
     git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
     if [ "$IS_CI" = false ]; then
         ~/.fzf/install
+        echo '[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh' >> "$HOME/.zshrc"
     elif [ "$PACKAGE_MANAGER" = "brew" ] && ["$IS_CI" = true ]; then
         brew install fzf
     fi
 fi
-echo '[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh' >> "$HOME/.zshrc"
+
 grep -qxF 'source <(fzf --zsh)' "$HOME/.zshrc" || echo 'source <(fzf --zsh)' >> "$HOME/.zshrc"
 
 # History settings
