@@ -37,7 +37,7 @@ jobs:
 
       - name: Verify fzf installation
         run: |
-          if ! command -v fzf &>/dev/null; then
+          if ! command -v fzf; then
             echo "❌ fzf not installed"
             exit 1
           else
