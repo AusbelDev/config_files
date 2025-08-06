@@ -67,3 +67,4 @@ jobs:
         with:
           name: zshrc-${{ matrix.os }}
           path: ~/.zshrc
+          include-hidden-files: true
