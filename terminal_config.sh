@@ -119,10 +119,10 @@ fi
 if [ ! -d "$HOME/.fzf" ]; then
     log "Installing fzf..."
     git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
-    if [ "$IS_CI" = true ]; then
-        ~/.fzf/install --all
-    else
-        ~/.fzf/install --all
+    if [ "$IS_CI" = false ]; then
+        ~/.fzf/install
+    elif [ "$PACKAGE_MANAGER" = "brew" ] && ["$IS_CI" = true ]; then
+        brew install fzf
     fi
 fi
 echo '[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh' >> "$HOME/.zshrc"
