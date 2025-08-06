@@ -3,6 +3,13 @@
 set -e  # Exit on error
 set -u  # Treat unset variables as error
 
+# Detect CI environment
+IS_CI=false
+if [ "${CI:-}" = "true" ]; then
+    IS_CI=true
+    export DEBIAN_FRONTEND=noninteractive
+fi
+
 # Colors
 GREEN="\e[32m"
 RED="\e[31m"
@@ -100,17 +107,21 @@ if [ "$PACKAGE_MANAGER" = "apt" ] && ! command -v bat &>/dev/null && command -v 
     sudo ln -sf /usr/bin/batcat /usr/local/bin/bat
 fi
 
-# Set zsh as default shell
-if [ "$SHELL" != "$(command -v zsh)" ]; then
+# Set zsh as default shell (skip in CI)
+if [ "$IS_CI" = false ] && [ "$SHELL" != "$(command -v zsh)" ]; then
     log "Setting Zsh as default shell..."
     chsh -s "$(command -v zsh)" "$USER"
 fi
 
-# Install FZF
+# Install FZF (non-interactive in CI)
 if [ ! -d "$HOME/.fzf" ]; then
     log "Installing fzf..."
     git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
-    ~/.fzf/install --all
+    if [ "$IS_CI" = true ]; then
+        ~/.fzf/install --no-bash --no-fish --no-update-rc
+    else
+        ~/.fzf/install --all
+    fi
 fi
 grep -qxF 'source <(fzf --zsh)' "$HOME/.zshrc" || echo 'source <(fzf --zsh)' >> "$HOME/.zshrc"
 
@@ -153,26 +164,32 @@ PLUGINS=(
 )
 for p in "${PLUGINS[@]}"; do add_zshrc_once "$p"; done
 
-# Install Nerd Font
-FONT_DIR="$HOME/.local/share/fonts"
-mkdir -p "$FONT_DIR"
-if [ "$PACKAGE_MANAGER" = "brew" ]; then
-    brew tap homebrew/cask-fonts
-    brew install --cask font-fira-mono-nerd-font
-else
-    FONT_ZIP="FiraMono.zip"
-    FONT_URL="https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/$FONT_ZIP"
-    if [ ! -f "$FONT_DIR/FiraMonoNerdFont-Regular.ttf" ]; then
-        log "Installing FiraMono Nerd Font..."
-        wget -q --show-progress -P "$FONT_DIR" "$FONT_URL"
-        cd "$FONT_DIR"
-        unzip -o "$FONT_ZIP"
-        rm "$FONT_ZIP"
-        fc-cache -fv
+# Install Nerd Font (skip in CI)
+if [ "$IS_CI" = false ]; then
+    FONT_DIR="$HOME/.local/share/fonts"
+    mkdir -p "$FONT_DIR"
+    if [ "$PACKAGE_MANAGER" = "brew" ]; then
+        brew tap homebrew/cask-fonts
+        brew install --cask font-fira-mono-nerd-font
     else
-        log "FiraMono Nerd Font already installed."
+        FONT_ZIP="FiraMono.zip"
+        FONT_URL="https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/$FONT_ZIP"
+        if [ ! -f "$FONT_DIR/FiraMonoNerdFont-Regular.ttf" ]; then
+            log "Installing FiraMono Nerd Font..."
+            wget -q --show-progress -P "$FONT_DIR" "$FONT_URL"
+            cd "$FONT_DIR"
+            unzip -o "$FONT_ZIP"
+            rm "$FONT_ZIP"
+            fc-cache -fv
+        else
+            log "FiraMono Nerd Font already installed."
+        fi
     fi
+else
+    log "Skipping font installation in CI."
 fi
 
-log "Setup complete! Starting Zsh..."
-exec zsh
+log "Setup complete!"
+if [ "$IS_CI" = false ]; then
+    exec zsh
+fi
