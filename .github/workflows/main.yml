@@ -22,7 +22,7 @@ jobs:
       - name: Run setup script
         run: |
           export CI=true
-          ./setup_terminal.sh
+          ./terminal_config.sh
 
       - name: Verify core commands
         run: |
