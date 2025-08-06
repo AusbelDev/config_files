@@ -123,6 +123,7 @@ if [ ! -d "$HOME/.fzf" ]; then
         ~/.fzf/install --all
     fi
 fi
+echo '[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh' >> "$HOME/.zshrc"
 grep -qxF 'source <(fzf --zsh)' "$HOME/.zshrc" || echo 'source <(fzf --zsh)' >> "$HOME/.zshrc"
 
 # History settings
