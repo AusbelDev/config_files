@@ -118,17 +118,24 @@ fi
 # Install FZF (non-interactive in CI)
 if [ ! -d "$HOME/.fzf" ]; then
     log "Installing fzf..."
-    if  [ "$PACKAGE_MANAGER" = "apt" ]; then
+    if  [ "$PACKAGE_MANAGER" = "apt" ] &&  [ "$IS_CI" = false ]; then
         git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
         ~/.fzf/install
         echo '[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh' >> "$HOME/.zshrc"
+        grep -qxF 'source <(fzf --zsh)' "$HOME/.zshrc" || echo 'source <(fzf --zsh)' >> "$HOME/.zshrc"
+        source ~/.fzf.zsh
+    elif  [ "$PACKAGE_MANAGER" = "apt" ] &&  [ "$IS_CI" = true ]; then
+        git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
+        ~/.fzf/install --all
+        echo '[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh' >> "$HOME/.zshrc"
+        grep -qxF 'source <(fzf --zsh)' "$HOME/.zshrc" || echo 'source <(fzf --zsh)' >> "$HOME/.zshrc"
         source ~/.fzf.zsh
     elif [ "$PACKAGE_MANAGER" = "brew" ]; then
         brew install fzf
     fi
 fi
 
-grep -qxF 'source <(fzf --zsh)' "$HOME/.zshrc" || echo 'source <(fzf --zsh)' >> "$HOME/.zshrc"
+
 
 # History settings
 add_zshrc_once() {
