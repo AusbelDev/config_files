@@ -118,11 +118,12 @@ fi
 # Install FZF (non-interactive in CI)
 if [ ! -d "$HOME/.fzf" ]; then
     log "Installing fzf..."
-    git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
-    if [ "$IS_CI" = false ]; then
+    if  [ "$PACKAGE_MANAGER" = "apt" ]; then
+        git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
         ~/.fzf/install
         echo '[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh' >> "$HOME/.zshrc"
-    elif [ "$PACKAGE_MANAGER" = "brew" ] && [ "$IS_CI" = true ]; then
+        source ~/.fzf.zsh
+    elif [ "$PACKAGE_MANAGER" = "brew" ]; then
         brew install fzf
     fi
 fi
