@@ -85,7 +85,7 @@ install_package() {
 if [ "$IS_CI" = false ]; then
     log "Updating system..."
     case "$PACKAGE_MANAGER" in
-        apt) sudo apt update && sudo apt upgrade -y ;;
+        apt) sudo add-apt-repository ppa:neovim-ppa/unstable -y && sudo apt update && sudo apt upgrade -y ;;
         dnf) sudo dnf upgrade -y ;;
         pacman) sudo pacman -Syu --noconfirm ;;
         brew) brew update ;;
@@ -95,9 +95,9 @@ fi
 # Install required packages
 REQUIRED_PKGS=(zsh git curl unzip)
 if [ "$PACKAGE_MANAGER" = "apt" ]; then
-    REQUIRED_PKGS+=(lsd fontconfig bat)
+    REQUIRED_PKGS+=(lsd fontconfig bat make gcc ripgrep xclip neovim)
 elif [ "$PACKAGE_MANAGER" = "brew" ]; then
-    REQUIRED_PKGS+=(lsd bat)
+    REQUIRED_PKGS+=(lsd bat neovim)
 fi
 
 for pkg in "${REQUIRED_PKGS[@]}"; do
@@ -131,7 +131,10 @@ if [ ! -d "$HOME/.fzf" ]; then
     fi
 fi
 
-
+# Install Nvim Kickstart config
+if [ ! -d "$HOME/.config/nvim" ]; then
+    git clone https://github.com/nvim-lua/kickstart.nvim.git "${XDG_CONFIG_HOME:-$HOME/.config}"/nvim
+fi
 
 # History settings
 add_zshrc_once() {
