@@ -3,6 +3,12 @@
 set -e  # Exit on error
 set -u  # Treat unset variables as error
 
+# Detect CI environment
+IS_CI=false
+if [ "${CI:-}" = "true" ]; then
+    IS_CI=true
+    export DEBIAN_FRONTEND=noninteractive
+fi
 
 # Colors
 GREEN="\e[32m"
@@ -23,46 +29,114 @@ if [ "$(id -u)" -eq 0 ]; then
     error "Do not run this script as root. It will use sudo as needed."
 fi
 
-check_cmd() {
-    command -v "$1" >/dev/null 2>&1
-}
+# Detect OS & package manager
+OS_TYPE="$(uname -s)"
+PACKAGE_MANAGER=""
+case "$OS_TYPE" in
+    Linux*)
+        if command -v apt &>/dev/null; then
+            PACKAGE_MANAGER="apt"
+        elif command -v dnf &>/dev/null; then
+            PACKAGE_MANAGER="dnf"
+        elif command -v pacman &>/dev/null; then
+            PACKAGE_MANAGER="pacman"
+        else
+            error "Unsupported Linux distribution"
+        fi
+        ;;
+    Darwin*)
+        PACKAGE_MANAGER="brew"
+        ;;
+    *)
+        error "Unsupported OS: $OS_TYPE"
+        ;;
+esac
+log "Detected OS: $OS_TYPE, using package manager: $PACKAGE_MANAGER"
 
-add_zshrc_once() {
-    grep -qxF "$1" "$HOME/.zshrc" || echo "$1" >> "$HOME/.zshrc"
-}
-
+# Install package function
 install_package() {
-    if ! dpkg -s "$1" >/dev/null 2>&1; then
-        log "Installing $1..."
-        sudo apt install -y "$1"
-    else
-        log "$1 already installed"
-    fi
+    case "$PACKAGE_MANAGER" in
+        apt)
+            if ! dpkg -s "$1" >/dev/null 2>&1; then
+                log "Installing $1..."
+                sudo apt install -y "$1"
+            else
+                log "$1 already installed"
+            fi
+            ;;
+        dnf)
+            sudo dnf install -y "$@"
+            ;;
+        pacman)
+            sudo pacman -Sy --noconfirm "$@"
+            ;;
+        brew)
+            if ! brew list "$1" &>/dev/null; then
+                log "Installing $1..."
+                brew install "$1"
+            else
+                log "$1 already installed"
+            fi
+            ;;
+    esac
 }
 
-log "Updating system..."
-sudo apt update && sudo apt upgrade -y
+# Update system
+if [ "$IS_CI" = false ]; then
+    log "Updating system..."
+    case "$PACKAGE_MANAGER" in
+        apt) sudo apt update && sudo apt upgrade -y ;;
+        dnf) sudo dnf upgrade -y ;;
+        pacman) sudo pacman -Syu --noconfirm ;;
+        brew) brew update ;;
+    esac
+fi
 
 # Install required packages
-for pkg in sudo wget curl zsh git lsd fontconfig unzip bat; do
+REQUIRED_PKGS=(zsh git curl unzip)
+if [ "$PACKAGE_MANAGER" = "apt" ]; then
+    REQUIRED_PKGS+=(lsd fontconfig bat ruby ruby-dev)
+elif [ "$PACKAGE_MANAGER" = "brew" ]; then
+    REQUIRED_PKGS+=(lsd bat ruby)
+fi
+
+for pkg in "${REQUIRED_PKGS[@]}"; do
     install_package "$pkg"
 done
 
-# Set zsh as default shell
-if [ "$SHELL" != "/usr/bin/zsh" ]; then
-    log "Setting Zsh as default shell..."
-    chsh -s /usr/bin/zsh $USER
+# Fix batcat on Debian
+if [ "$PACKAGE_MANAGER" = "apt" ] && ! command -v bat &>/dev/null && command -v batcat &>/dev/null; then
+    sudo ln -sf /usr/bin/batcat /usr/local/bin/bat
 fi
 
-# Install FZF
+# Set zsh as default shell (skip in CI)
+if [ "$IS_CI" = false ] && [ "$SHELL" != "$(command -v zsh)" ]; then
+    log "Setting Zsh as default shell..."
+    chsh -s "$(command -v zsh)" "$USER"
+fi
+
+# Install FZF (non-interactive in CI)
 if [ ! -d "$HOME/.fzf" ]; then
     log "Installing fzf..."
-    git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
-    ~/.fzf/install
+    if  [ "$PACKAGE_MANAGER" = "apt" ] &&  [ "$IS_CI" = false ]; then
+        git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
+        ~/.fzf/install
+        #echo '[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh' >> "$HOME/.zshrc"
+        grep -qxF 'source <(fzf --zsh)' "$HOME/.zshrc" || echo 'source <(fzf --zsh)' >> "$HOME/.zshrc"
+        #source ~/.fzf.zsh
+    elif  [ "$PACKAGE_MANAGER" = "apt" ] &&  [ "$IS_CI" = true ]; then
+        sudo apt install fzf
+    elif [ "$PACKAGE_MANAGER" = "brew" ]; then
+        brew install fzf
+    fi
 fi
-echo 'source <(fzf --zsh)' >> .zshrc
+
+
 
 # History settings
+add_zshrc_once() {
+    grep -qxF "$1" "$HOME/.zshrc" || echo "$1" >> "$HOME/.zshrc"
+}
 add_zshrc_once 'HISTFILE=~/.zsh_history'
 add_zshrc_once 'HISTSIZE=10000'
 add_zshrc_once 'SAVEHIST=10000'
@@ -70,11 +144,14 @@ add_zshrc_once 'setopt appendhistory'
 add_zshrc_once 'setopt sharehistory'
 add_zshrc_once 'setopt incappendhistory'
 
-#alias adding
-add_zshrc_once 'alias bat="batcat"'
+# Aliases
 add_zshrc_once 'alias clr="clear"'
 add_zshrc_once 'alias py="python3"'
 add_zshrc_once 'alias ls="ls -la"'
+if command -v batcat &>/dev/null; then
+    add_zshrc_once 'alias bat="batcat"'
+fi
+
 # Zap Zsh plugin manager
 if [ ! -d "$HOME/.local/share/zap" ]; then
     log "Installing Zap..."
@@ -83,31 +160,44 @@ fi
 add_zshrc_once '[ -f "$HOME/.local/share/zap/zap.zsh" ] && source "$HOME/.local/share/zap/zap.zsh"'
 
 # Zap plugins
-add_zshrc_once 'plug "romkatv/powerlevel10k"'
-add_zshrc_once 'plug "zap-zsh/supercharge"'
-add_zshrc_once 'plug "wintermi/zsh-lsd"'
-add_zshrc_once 'plug "zsh-users/zsh-syntax-highlighting"'
-add_zshrc_once 'plug "zsh-users/zsh-history-substring-search"'
-add_zshrc_once 'plug "Aloxaf/fzf-tab"'
-add_zshrc_once 'plug "Freed-Wu/fzf-tab-source"'
-add_zshrc_once 'plug "zsh-users/zsh-autosuggestions"'
+PLUGINS=(
+    'plug "romkatv/powerlevel10k"'
+    'plug "zap-zsh/supercharge"'
+    'plug "wintermi/zsh-lsd"'
+    'plug "zsh-users/zsh-syntax-highlighting"'
+    'plug "zsh-users/zsh-history-substring-search"'
+    'plug "Aloxaf/fzf-tab"'
+    'plug "Freed-Wu/fzf-tab-source"'
+    'plug "zsh-users/zsh-autosuggestions"'
+)
+for p in "${PLUGINS[@]}"; do add_zshrc_once "$p"; done
 
-# Install Nerd Font: JetBrainsMono
-FONT_DIR="$HOME/.local/share/fonts"
-FONT_ZIP="FiraMono.zip"
-FONT_URL="https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/$FONT_ZIP"
-
-mkdir -p "$FONT_DIR"
-if [ ! -f "$FONT_DIR/FiraMonoNerdFont-Regular.ttf" ]; then
-    log "Installing FiraMono Nerd Font..."
-    wget -q --show-progress -P "$FONT_DIR" "$FONT_URL"
-    cd "$FONT_DIR"
-    unzip -o "$FONT_ZIP"
-    rm "$FONT_ZIP"
-    fc-cache -fv
+# Install Nerd Font (skip in CI)
+if [ "$IS_CI" = false ]; then
+    FONT_DIR="$HOME/.local/share/fonts"
+    mkdir -p "$FONT_DIR"
+    if [ "$PACKAGE_MANAGER" = "brew" ]; then
+        brew tap homebrew/cask-fonts
+        brew install --cask font-fira-mono-nerd-font
+    else
+        FONT_ZIP="FiraMono.zip"
+        FONT_URL="https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/$FONT_ZIP"
+        if [ ! -f "$FONT_DIR/FiraMonoNerdFont-Regular.ttf" ]; then
+            log "Installing FiraMono Nerd Font..."
+            wget -q --show-progress -P "$FONT_DIR" "$FONT_URL"
+            cd "$FONT_DIR"
+            unzip -o "$FONT_ZIP"
+            rm "$FONT_ZIP"
+            fc-cache -fv
+        else
+            log "FiraMono Nerd Font already installed."
+        fi
+    fi
 else
-    log "FiraMono Nerd Font already installed."
+    log "Skipping font installation in CI."
 fi
 
-log "Setup complete! Starting Zsh..."
-exec zsh
+log "Setup complete!"
+if [ "$IS_CI" = false ]; then
+    exec zsh
+fi
