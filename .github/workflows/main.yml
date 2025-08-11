@@ -44,6 +44,21 @@ jobs:
             echo "✅ fzf installed"
           fi
 
+      - name: Verify Nvim and Kickstart installation
+        run: |
+          if ! command -v nvim &>/dev/null; then
+            echo "❌ Nvim not installed"
+            exit 1
+          else
+            echo "✅ Nvim installed"
+          fi
+          if ! -d "$HOME/.config/nvim/lua/kickstart" &>/dev/null; then
+            echo "❌ Kickstart config not installed"
+            exit 1
+          else
+            echo "✅ Kickstart config installed"
+          fi
+
       - name: Verify Zsh plugins
         run: |
           ZAP_DIR="$HOME/.local/share/zap"
