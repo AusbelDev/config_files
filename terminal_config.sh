@@ -123,7 +123,7 @@ if [ ! -d "$HOME/.fzf" ]; then
         ~/.fzf/install
         #echo '[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh' >> "$HOME/.zshrc"
         grep -qxF 'source <(fzf --zsh)' "$HOME/.zshrc" || echo 'source <(fzf --zsh)' >> "$HOME/.zshrc"
-        source ~/.fzf.zsh
+        #source ~/.fzf.zsh
     elif  [ "$PACKAGE_MANAGER" = "apt" ] &&  [ "$IS_CI" = true ]; then
         sudo apt install fzf
     elif [ "$PACKAGE_MANAGER" = "brew" ]; then
