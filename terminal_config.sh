@@ -95,9 +95,9 @@ fi
 # Install required packages
 REQUIRED_PKGS=(zsh git curl unzip)
 if [ "$PACKAGE_MANAGER" = "apt" ]; then
-    REQUIRED_PKGS+=(lsd fontconfig bat ruby ruby-dev)
+    REQUIRED_PKGS+=(lsd fontconfig bat)
 elif [ "$PACKAGE_MANAGER" = "brew" ]; then
-    REQUIRED_PKGS+=(lsd bat ruby)
+    REQUIRED_PKGS+=(lsd bat)
 fi
 
 for pkg in "${REQUIRED_PKGS[@]}"; do
