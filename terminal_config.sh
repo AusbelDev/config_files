@@ -121,7 +121,7 @@ if [ ! -d "$HOME/.fzf" ]; then
     if  [ "$PACKAGE_MANAGER" = "apt" ] &&  [ "$IS_CI" = false ]; then
         git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
         ~/.fzf/install
-        echo '[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh' >> "$HOME/.zshrc"
+        #echo '[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh' >> "$HOME/.zshrc"
         grep -qxF 'source <(fzf --zsh)' "$HOME/.zshrc" || echo 'source <(fzf --zsh)' >> "$HOME/.zshrc"
         source ~/.fzf.zsh
     elif  [ "$PACKAGE_MANAGER" = "apt" ] &&  [ "$IS_CI" = true ]; then
