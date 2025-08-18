@@ -97,7 +97,7 @@ REQUIRED_PKGS=(zsh git curl unzip)
 if [ "$PACKAGE_MANAGER" = "apt" ]; then
     REQUIRED_PKGS+=(lsd fontconfig bat make gcc ripgrep xclip neovim zoxide)
 elif [ "$PACKAGE_MANAGER" = "brew" ]; then
-    REQUIRED_PKGS+=(lsd bat neovim)
+    REQUIRED_PKGS+=(lsd bat neovim zoxide)
 fi
 
 for pkg in "${REQUIRED_PKGS[@]}"; do
