@@ -95,7 +95,7 @@ fi
 # Install required packages
 REQUIRED_PKGS=(zsh git curl unzip)
 if [ "$PACKAGE_MANAGER" = "apt" ]; then
-    REQUIRED_PKGS+=(lsd fontconfig bat make gcc ripgrep xclip neovim)
+    REQUIRED_PKGS+=(lsd fontconfig bat make gcc ripgrep xclip neovim zoxide)
 elif [ "$PACKAGE_MANAGER" = "brew" ]; then
     REQUIRED_PKGS+=(lsd bat neovim)
 fi
@@ -161,7 +161,7 @@ if [ ! -d "$HOME/.local/share/zap" ]; then
     zsh <(curl -s https://raw.githubusercontent.com/zap-zsh/zap/master/install.zsh) --branch release-v1 --keep
 fi
 add_zshrc_once '[ -f "$HOME/.local/share/zap/zap.zsh" ] && source "$HOME/.local/share/zap/zap.zsh"'
-
+add_zshrc_once 'eval "$(zoxide init zsh)"'
 # Zap plugins
 PLUGINS=(
     'plug "romkatv/powerlevel10k"'
