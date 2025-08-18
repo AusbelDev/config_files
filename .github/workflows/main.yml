@@ -26,7 +26,7 @@ jobs:
 
       - name: Verify core commands
         run: |
-          for cmd in zsh git curl unzip lsd bat; do
+          for cmd in zsh git curl unzip lsd bat zoxide; do
             if ! command -v "$cmd" &>/dev/null; then
               echo "❌ $cmd not found"
               exit 1
