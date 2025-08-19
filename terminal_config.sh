@@ -150,7 +150,8 @@ add_zshrc_once 'setopt incappendhistory'
 # Aliases
 add_zshrc_once 'alias clr="clear"'
 add_zshrc_once 'alias py="python3"'
-add_zshrc_once 'alias ls="ls -la"'
+add_zshrc_once 'alias ls="lsd --group-directories-first -a"'
+add_zshrc_once 'alias ll="lsd -la --group-directories-first"'
 if command -v batcat &>/dev/null; then
     add_zshrc_once 'alias bat="batcat"'
 fi
@@ -161,7 +162,7 @@ if [ ! -d "$HOME/.local/share/zap" ]; then
     zsh <(curl -s https://raw.githubusercontent.com/zap-zsh/zap/master/install.zsh) --branch release-v1 --keep
 fi
 add_zshrc_once '[ -f "$HOME/.local/share/zap/zap.zsh" ] && source "$HOME/.local/share/zap/zap.zsh"'
-add_zshrc_once 'eval "$(zoxide init zsh)"'
+add_zshrc_once 'eval "$(zoxide init zsh --cmd cd)"'
 # Zap plugins
 PLUGINS=(
     'plug "romkatv/powerlevel10k"'
