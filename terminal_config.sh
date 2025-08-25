@@ -152,6 +152,8 @@ add_zshrc_once 'alias clr="clear"'
 add_zshrc_once 'alias py="python3"'
 add_zshrc_once 'alias ls="lsd --group-directories-first -a"'
 add_zshrc_once 'alias ll="lsd -la --group-directories-first"'
+add_zshrc_once 'alias lt="lsd -l --group-directories-first --tree --depth=2"'
+
 if command -v batcat &>/dev/null; then
     add_zshrc_once 'alias bat="batcat"'
 fi
