@@ -131,6 +131,12 @@ if [ ! -d "$HOME/.fzf" ]; then
     fi
 fi
 
+# Install UV (non-interactive in CI)
+if ! command -v uv >/dev/null 2>&1; then
+    log "Installing uv..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+fi
+
 # Install Nvim Kickstart config
 if [ ! -d "$HOME/.config/nvim" ]; then
     git clone https://github.com/nvim-lua/kickstart.nvim.git "${XDG_CONFIG_HOME:-$HOME/.config}"/nvim
@@ -146,13 +152,6 @@ add_zshrc_once 'SAVEHIST=10000'
 add_zshrc_once 'setopt appendhistory'
 add_zshrc_once 'setopt sharehistory'
 add_zshrc_once 'setopt incappendhistory'
-
-# Aliases
-add_zshrc_once 'alias clr="clear"'
-add_zshrc_once 'alias py="python3"'
-add_zshrc_once 'alias ls="lsd --group-directories-first -a"'
-add_zshrc_once 'alias ll="lsd -la --group-directories-first"'
-add_zshrc_once 'alias lt="lsd -l --group-directories-first --tree --depth=2"'
 
 if command -v batcat &>/dev/null; then
     add_zshrc_once 'alias bat="batcat"'
@@ -202,6 +201,13 @@ if [ "$IS_CI" = false ]; then
 else
     log "Skipping font installation in CI."
 fi
+
+# Aliases
+add_zshrc_once 'alias clr="clear"'
+add_zshrc_once 'alias py="python3"'
+add_zshrc_once 'alias ls="lsd --group-directories-first -a"'
+add_zshrc_once 'alias ll="lsd -la --group-directories-first"'
+add_zshrc_once 'alias lt="lsd -l --group-directories-first --tree --depth=2"'
 
 log "Setup complete!"
 if [ "$IS_CI" = false ]; then
