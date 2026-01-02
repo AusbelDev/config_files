@@ -24,6 +24,10 @@ error() {
     exit 1
 }
 
+add_zshrc_once() {
+    grep -qxF "$1" "$HOME/.zshrc" || echo "$1" >> "$HOME/.zshrc"
+}
+
 # Ensure script is run as normal user, not root
 if [ "$(id -u)" -eq 0 ]; then
     error "Do not run this script as root. It will use sudo as needed."
@@ -85,28 +89,59 @@ install_package() {
 if [ "$IS_CI" = false ]; then
     log "Updating system..."
     case "$PACKAGE_MANAGER" in
-        apt) sudo add-apt-repository ppa:neovim-ppa/unstable -y && sudo apt update && sudo apt upgrade -y ;;
+        apt) sudo apt update && sudo apt upgrade -y ;;
         dnf) sudo dnf upgrade -y ;;
         pacman) sudo pacman -Syu --noconfirm ;;
-        brew) brew update ;;
+        brew) brew update && brew upgrade ;;
     esac
 fi
 
-# Install required packages
+# Install Homebrew if using apt (Linux)
+if [ "$PACKAGE_MANAGER" = "apt" ]; then
+    log "Checking for Homebrew..."
+    if ! command -v brew &>/dev/null; then
+        log "Installing Homebrew..."
+        # Install dependencies for Homebrew
+        sudo apt install -y build-essential procps curl file git
+        
+        # Install Homebrew
+        NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        
+        # Configure shell environment
+        if [ -d "/home/linuxbrew/.linuxbrew" ]; then
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+            add_zshrc_once 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"'
+        elif [ -d "$HOME/.linuxbrew" ]; then
+            eval "$($HOME/.linuxbrew/bin/brew shellenv)"
+            add_zshrc_once 'eval "$($HOME/.linuxbrew/bin/brew shellenv)"'
+        fi
+    else
+        log "Homebrew already installed"
+    fi
+fi
+
+# Install system packages (OS-dependent)
 REQUIRED_PKGS=(zsh git curl unzip)
 if [ "$PACKAGE_MANAGER" = "apt" ]; then
-    REQUIRED_PKGS+=(lsd fontconfig bat make gcc ripgrep xclip neovim zoxide)
-elif [ "$PACKAGE_MANAGER" = "brew" ]; then
-    REQUIRED_PKGS+=(lsd bat neovim zoxide)
+    REQUIRED_PKGS+=(fontconfig xclip)
 fi
 
 for pkg in "${REQUIRED_PKGS[@]}"; do
     install_package "$pkg"
 done
 
-# Fix batcat on Debian
-if [ "$PACKAGE_MANAGER" = "apt" ] && ! command -v bat &>/dev/null && command -v batcat &>/dev/null; then
-    sudo ln -sf /usr/bin/batcat /usr/local/bin/bat
+# Install common tools via Homebrew (Linux & macOS)
+if command -v brew &>/dev/null; then
+    log "Installing common tools with Homebrew..."
+    BREW_PKGS=(lsd bat neovim zoxide ripgrep git-delta fzf)
+    for pkg in "${BREW_PKGS[@]}"; do
+        if ! brew list "$pkg" &>/dev/null; then
+            log "Installing $pkg..."
+            brew install "$pkg"
+        else
+            log "$pkg already installed"
+        fi
+    done
 fi
 
 # Set zsh as default shell (skip in CI)
@@ -115,19 +150,11 @@ if [ "$IS_CI" = false ] && [ "$SHELL" != "$(command -v zsh)" ]; then
     chsh -s "$(command -v zsh)" "$USER"
 fi
 
-# Install FZF (non-interactive in CI)
-if [ ! -d "$HOME/.fzf" ]; then
-    log "Installing fzf..."
-    if  [ "$PACKAGE_MANAGER" = "apt" ] &&  [ "$IS_CI" = false ]; then
-        git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
-        ~/.fzf/install
-        #echo '[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh' >> "$HOME/.zshrc"
-        grep -qxF 'source <(fzf --zsh)' "$HOME/.zshrc" || echo 'source <(fzf --zsh)' >> "$HOME/.zshrc"
-        #source ~/.fzf.zsh
-    elif  [ "$PACKAGE_MANAGER" = "apt" ] &&  [ "$IS_CI" = true ]; then
-        sudo apt install fzf
-    elif [ "$PACKAGE_MANAGER" = "brew" ]; then
-        brew install fzf
+# Configure FZF (Already installed via brew)
+if [ ! -f "$HOME/.fzf.zsh" ]; then
+    # Homebrew fzf setup
+    if [ -f "$(brew --prefix)/opt/fzf/install" ]; then
+        "$(brew --prefix)/opt/fzf/install" --all --no-bash --no-fish
     fi
 fi
 
@@ -143,9 +170,6 @@ if [ ! -d "$HOME/.config/nvim" ]; then
 fi
 
 # History settings
-add_zshrc_once() {
-    grep -qxF "$1" "$HOME/.zshrc" || echo "$1" >> "$HOME/.zshrc"
-}
 add_zshrc_once 'HISTFILE=~/.zsh_history'
 add_zshrc_once 'HISTSIZE=10000'
 add_zshrc_once 'SAVEHIST=10000'
@@ -206,8 +230,8 @@ fi
 add_zshrc_once 'alias clr="clear"'
 add_zshrc_once 'alias py="python3"'
 add_zshrc_once 'alias ls="lsd --group-directories-first -a"'
-add_zshrc_once 'alias ll="lsd -la --group-directories-first"'
-add_zshrc_once 'alias lt="lsd -l --group-directories-first --tree --depth=2"'
+add_zshrc_once 'alias ll="lsd -la --group-directories-first --git"'
+add_zshrc_once 'alias lt="lsd -l --group-directories-first --tree --depth=2 --git"'
 
 log "Setup complete!"
 if [ "$IS_CI" = false ]; then
