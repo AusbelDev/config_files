@@ -185,10 +185,6 @@ add_zshrc_once 'setopt appendhistory'
 add_zshrc_once 'setopt sharehistory'
 add_zshrc_once 'setopt incappendhistory'
 
-if command -v batcat &>/dev/null; then
-    add_zshrc_once 'alias bat="batcat"'
-fi
-
 # Zap Zsh plugin manager
 if [ ! -d "$HOME/.local/share/zap" ]; then
     log "Installing Zap..."
@@ -214,7 +210,6 @@ if [ "$IS_CI" = false ]; then
     FONT_DIR="$HOME/.local/share/fonts"
     mkdir -p "$FONT_DIR"
     if [ "$PACKAGE_MANAGER" = "brew" ]; then
-        brew tap homebrew/cask-fonts
         brew install --cask font-fira-mono-nerd-font
     else
         FONT_ZIP="FiraMono.zip"
