@@ -1,0 +1,29 @@
+{
+  "security": {
+    "auth": {
+      "selectedType": "oauth-personal"
+    }
+  },
+  "mcpServers": {
+    "kimAI": {
+      "command": "uv",
+      "args": [
+	"run",
+	"-m",
+        "kimai.server"
+      ],
+      "cwd": "/home/ausbel/mcp-kimai/"
+    }
+  },
+  "ui": {
+    "theme": "Atom One",
+    "footer": {
+      "hideContextPercentage": false
+    },
+    "showMemoryUsage": true,
+    "showLineNumbers": true
+  },
+  "general": {
+    "previewFeatures": true
+  }
+}
