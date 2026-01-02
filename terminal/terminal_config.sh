@@ -111,9 +111,17 @@ if [ "$PACKAGE_MANAGER" = "apt" ]; then
         if [ -d "/home/linuxbrew/.linuxbrew" ]; then
             eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
             add_zshrc_once 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"'
+            # Add to GITHUB_PATH for CI
+            if [ -n "${GITHUB_PATH:-}" ]; then
+                echo "/home/linuxbrew/.linuxbrew/bin" >> "$GITHUB_PATH"
+            fi
         elif [ -d "$HOME/.linuxbrew" ]; then
             eval "$($HOME/.linuxbrew/bin/brew shellenv)"
             add_zshrc_once 'eval "$($HOME/.linuxbrew/bin/brew shellenv)"'
+            # Add to GITHUB_PATH for CI
+            if [ -n "${GITHUB_PATH:-}" ]; then
+                echo "$HOME/.linuxbrew/bin" >> "$GITHUB_PATH"
+            fi
         fi
     else
         log "Homebrew already installed"
