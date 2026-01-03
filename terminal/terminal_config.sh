@@ -224,8 +224,26 @@ link_config() {
 setup_dotfiles() {
     log "Setting up dotfiles..."
     
+    # Neovim Setup (Kickstart)
+    if [ -L "$HOME/.config/nvim" ]; then
+        rm "$HOME/.config/nvim"
+    elif [ -d "$HOME/.config/nvim" ] && [ ! -d "$HOME/.config/nvim/.git" ]; then
+        mv "$HOME/.config/nvim" "$HOME/.config/nvim.bak.$(date +%s)"
+    fi
+    
+    if [ ! -d "$HOME/.config/nvim" ]; then
+        log "Cloning Kickstart.nvim..."
+        git clone https://github.com/nvim-lua/kickstart.nvim.git "$HOME/.config/nvim"
+    fi
+    
+    # Link custom init.lua over the cloned one
+    if [ -f "$DOTFILES_DIR/nvim/init.lua" ]; then
+        log "Linking custom init.lua..."
+        rm -f "$HOME/.config/nvim/init.lua"
+        ln -s "$DOTFILES_DIR/nvim/init.lua" "$HOME/.config/nvim/init.lua"
+    fi
+
     # Standard .config directories
-    link_config "$DOTFILES_DIR/nvim"   "$HOME/.config/nvim"
     link_config "$DOTFILES_DIR/bat"    "$HOME/.config/bat"
     link_config "$DOTFILES_DIR/zellij" "$HOME/.config/zellij"
     link_config "$DOTFILES_DIR/gemini" "$HOME/.config/gemini"
