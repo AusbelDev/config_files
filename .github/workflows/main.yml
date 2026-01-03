@@ -52,8 +52,12 @@ jobs:
           else
             echo "✅ Nvim installed"
           fi
-          if [ ! -d "$HOME/.config/nvim/lua/kickstart" ]; then
-            echo "❌ Kickstart config not installed"
+          if [ ! -f "$HOME/.config/nvim/init.lua" ]; then
+            echo "❌ Nvim config file not found"
+            exit 1
+          fi
+          if ! grep -q "Kickstart" "$HOME/.config/nvim/init.lua"; then
+            echo "❌ Kickstart config not detected in init.lua"
             exit 1
           else
             echo "✅ Kickstart config installed"
