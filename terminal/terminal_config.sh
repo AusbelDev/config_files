@@ -25,7 +25,9 @@ error() {
 }
 
 add_zshrc_once() {
-    grep -qxF "$1" "$HOME/.zshrc" || echo "$1" >> "$HOME/.zshrc"
+    local zshrc="$HOME/.zshrc"
+    [ -f "$zshrc" ] || touch "$zshrc"
+    grep -qxF "$1" "$zshrc" || echo "$1" >> "$zshrc"
 }
 
 # Ensure script is run as normal user, not root
@@ -69,10 +71,20 @@ install_package() {
             fi
             ;;
         dnf)
-            sudo dnf install -y "$@"
+            if ! rpm -q "$1" >/dev/null 2>&1; then
+                log "Installing $1..."
+                sudo dnf install -y "$1"
+            else
+                log "$1 already installed"
+            fi
             ;;
         pacman)
-            sudo pacman -Sy --noconfirm "$@"
+            if ! pacman -Qs "^$1$" >/dev/null 2>&1; then
+                log "Installing $1..."
+                sudo pacman -S --noconfirm "$1"
+            else
+                log "$1 already installed"
+            fi
             ;;
         brew)
             if ! brew list "$1" &>/dev/null; then
@@ -153,7 +165,7 @@ if command -v brew &>/dev/null; then
 fi
 
 # Set zsh as default shell (skip in CI)
-if [ "$IS_CI" = false ] && [ "$SHELL" != "$(command -v zsh)" ]; then
+if [ "$IS_CI" = false ] && [ "$(basename "$SHELL")" != "zsh" ]; then
     log "Setting Zsh as default shell..."
     chsh -s "$(command -v zsh)" "$USER"
 fi
@@ -161,7 +173,7 @@ fi
 # Configure FZF (Already installed via brew)
 if [ ! -f "$HOME/.fzf.zsh" ]; then
     # Homebrew fzf setup
-    if [ -f "$(brew --prefix)/opt/fzf/install" ]; then
+    if command -v brew &>/dev/null && [ -f "$(brew --prefix)/opt/fzf/install" ]; then
         "$(brew --prefix)/opt/fzf/install" --all --no-bash --no-fish
     fi
 fi
@@ -210,7 +222,12 @@ if [ "$IS_CI" = false ]; then
     FONT_DIR="$HOME/.local/share/fonts"
     mkdir -p "$FONT_DIR"
     if [ "$PACKAGE_MANAGER" = "brew" ]; then
-        brew install --cask font-fira-mono-nerd-font
+        if ! brew list --cask font-fira-mono-nerd-font &>/dev/null; then
+            log "Installing FiraMono Nerd Font..."
+            brew install --cask font-fira-mono-nerd-font
+        else
+            log "FiraMono Nerd Font already installed"
+        fi
     else
         FONT_ZIP="FiraMono.zip"
         FONT_URL="https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/$FONT_ZIP"
