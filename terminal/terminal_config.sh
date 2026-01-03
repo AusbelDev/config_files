@@ -184,10 +184,60 @@ if ! command -v uv >/dev/null 2>&1; then
     curl -LsSf https://astral.sh/uv/install.sh | sh
 fi
 
-# Install Nvim Kickstart config
-if [ ! -d "$HOME/.config/nvim" ]; then
-    git clone https://github.com/nvim-lua/kickstart.nvim.git "${XDG_CONFIG_HOME:-$HOME/.config}"/nvim
-fi
+# Dotfiles Setup
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+link_config() {
+    local src="$1"
+    local dest="$2"
+    
+    # Check if source exists
+    if [ ! -e "$src" ]; then
+        log "Warning: Source file $src does not exist. Skipping..."
+        return
+    fi
+
+    # Create parent dir if needed
+    mkdir -p "$(dirname "$dest")"
+    
+    # Check if already linked correctly
+    if [ -L "$dest" ]; then
+        # Use ls -l to check link target efficiently across OS
+        local link_target
+        link_target="$(ls -ld "$dest" | awk '{print $NF}')"
+        if [ "$link_target" = "$src" ]; then
+            log "$dest is already linked to $src"
+            return
+        fi
+    fi
+    
+    # Backup if exists (and not the correct link)
+    if [ -e "$dest" ] || [ -L "$dest" ]; then
+        log "Backing up existing $dest to ${dest}.bak"
+        mv "$dest" "${dest}.bak"
+    fi
+    
+    log "Linking $src to $dest"
+    ln -s "$src" "$dest"
+}
+
+setup_dotfiles() {
+    log "Setting up dotfiles..."
+    
+    # Standard .config directories
+    link_config "$DOTFILES_DIR/nvim"   "$HOME/.config/nvim"
+    link_config "$DOTFILES_DIR/bat"    "$HOME/.config/bat"
+    link_config "$DOTFILES_DIR/zellij" "$HOME/.config/zellij"
+    link_config "$DOTFILES_DIR/gemini" "$HOME/.config/gemini"
+    link_config "$DOTFILES_DIR/git"    "$HOME/.config/git"
+    
+    # P10k (usually in home)
+    if [ -f "$DOTFILES_DIR/p10k/.p10k.zsh" ]; then
+        link_config "$DOTFILES_DIR/p10k/.p10k.zsh" "$HOME/.p10k.zsh"
+    fi
+}
+
+setup_dotfiles
 
 # History settings
 add_zshrc_once 'HISTFILE=~/.zsh_history'
