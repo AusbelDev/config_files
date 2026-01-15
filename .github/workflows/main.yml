@@ -89,6 +89,7 @@ jobs:
             "Aloxaf/fzf-tab"
             "Freed-Wu/fzf-tab-source"
             "zsh-users/zsh-autosuggestions"
+            "wintermi/zsh-brew"
           )
           for plugin in "${REQUIRED_PLUGINS[@]}"; do
             if ! grep -q "$plugin" "$HOME/.zshrc"; then
