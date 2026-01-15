@@ -182,6 +182,19 @@ fi
 if ! command -v uv >/dev/null 2>&1; then
     log "Installing uv..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
+    
+    # Add to PATH for current script and GITHUB_PATH for CI
+    if [ -d "$HOME/.cargo/bin" ]; then
+        export PATH="$HOME/.cargo/bin:$PATH"
+        if [ -n "${GITHUB_PATH:-}" ]; then
+            echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+        fi
+    elif [ -d "$HOME/.local/bin" ]; then
+        export PATH="$HOME/.local/bin:$PATH"
+        if [ -n "${GITHUB_PATH:-}" ]; then
+            echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+        fi
+    fi
 fi
 
 # Dotfiles Setup
