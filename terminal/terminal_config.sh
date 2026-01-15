@@ -153,7 +153,7 @@ done
 # Install common tools via Homebrew (Linux & macOS)
 if command -v brew &>/dev/null; then
     log "Installing common tools with Homebrew..."
-    BREW_PKGS=(lsd bat neovim zoxide ripgrep git-delta fzf)
+    BREW_PKGS=(lsd bat neovim zoxide ripgrep git-delta fzf fd)
     for pkg in "${BREW_PKGS[@]}"; do
         if ! brew list "$pkg" &>/dev/null; then
             log "Installing $pkg..."
