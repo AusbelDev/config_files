@@ -244,5 +244,6 @@ add_zshrc_once 'alias gs="git status"'
 add_zshrc_once 'alias gcam="git commit -am"'
 add_zshrc_once 'alias gpush="git push"'
 add_zshrc_once 'autoload -Uz compinit && compinit -d "${ZDOTDIR:-$HOME}/.zcompdump"'
+add_zshrc_once 'source ~/.p10k.zsh'
 
 log "Setup complete! Please restart your shell or run 'zsh'."
