@@ -295,6 +295,7 @@ PLUGINS=(
     'plug "Aloxaf/fzf-tab"'
     'plug "Freed-Wu/fzf-tab-source"'
     'plug "zsh-users/zsh-autosuggestions"'
+    'plug "wintermi/zsh-brew"'
 )
 for p in "${PLUGINS[@]}"; do add_zshrc_once "$p"; done
 
@@ -333,7 +334,6 @@ add_zshrc_once 'alias py="python3"'
 add_zshrc_once 'alias ls="lsd --group-directories-first -a"'
 add_zshrc_once 'alias ll="lsd -la --group-directories-first --git"'
 add_zshrc_once 'alias lt="lsd -l --group-directories-first --tree --depth=2 --git"'
-
 add_zshrc_once 'alias gs="git status"'
 add_zshrc_once 'alias gcam="git commit -am"'
 add_zshrc_once 'alias gcm="git commit -m"'
@@ -346,6 +346,9 @@ add_zshrc_once 'alias gsta="git stash apply"'
 add_zshrc_once 'alias gb="git branch"'
 add_zshrc_once 'alias gbr="git branch -r"'
 add_zshrc_once 'alias glog="git log --oneline --graph"'
+add_zshrc_once 'autoload -Uz compinit'
+add_zshrc_once 'compinit -d "${ZDOTDIR:-$HOME}/.zcompdump"'
+
 log "Setup complete!"
 if [ "$IS_CI" = false ]; then
     exec zsh
