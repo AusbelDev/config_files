@@ -66,8 +66,7 @@ if command -v dnf &>/dev/null; then
         ripgrep fd-find
     )
     
-    log "Updating system and installing base packages..."
-    $SUDO dnf update -y
+    log "Installing base packages..."
     $SUDO dnf install -y "${REQUIRED_PKGS[@]}"
 fi
 
@@ -182,7 +181,6 @@ fi
 link_config "$DOTFILES_DIR/bat"    "$HOME/.config/bat"
 link_config "$DOTFILES_DIR/zellij" "$HOME/.config/zellij"
 link_config "$DOTFILES_DIR/gemini" "$HOME/.config/gemini"
-link_config "$DOTFILES_DIR/git"    "$HOME/.config/git"
 
 # P10k
 [ -f "$DOTFILES_DIR/p10k/.p10k.zsh" ] && link_config "$DOTFILES_DIR/p10k/.p10k.zsh" "$HOME/.p10k.zsh"
