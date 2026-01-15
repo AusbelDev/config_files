@@ -63,7 +63,7 @@ if command -v dnf &>/dev/null; then
         zsh git curl wget unzip tar
         util-linux-user glibc-langpack-en
         gcc make
-        ripgrep fd-find
+        ripgrep fd-find fontconfig
     )
     
     log "Installing base packages..."
@@ -166,6 +166,19 @@ link_config() {
     ln -s "$src" "$dest"
     log "Linked $dest -> $src"
 }
+
+# Fonts
+log "Installing FiraCode font..."
+FONT_DIR="$HOME/.local/share/fonts"
+mkdir -p "$FONT_DIR"
+if [ -f "$DOTFILES_DIR/Fonts/FiraCode.zip" ]; then
+    unzip -o "$DOTFILES_DIR/Fonts/FiraCode.zip" -d "$FONT_DIR"
+    if command -v fc-cache &>/dev/null; then
+        fc-cache -f "$FONT_DIR"
+    fi
+else
+    info "FiraCode.zip not found in $DOTFILES_DIR/Fonts/, skipping font installation."
+fi
 
 log "Setting up dotfiles..."
 
