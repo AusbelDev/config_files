@@ -87,13 +87,11 @@ mkdir -p "$BIN_DIR"
 export PATH="$BIN_DIR:$PATH"
 add_zshrc_once 'export PATH="$HOME/.local/bin:$PATH"'
 
-# --- Neovim (Latest Stable) ---
+# --- Neovim ---
 if ! command -v nvim &>/dev/null; then
-    log "Installing Neovim (latest stable)..."
-    NVIM_URL="https://github.com/neovim/neovim/releases/download/nightly/nvim-linux-x86_64.tar.gz"
-    curl -fLo /tmp/nvim.tar.gz "$NVIM_URL"
-    tar xzf /tmp/nvim.tar.gz -C "$HOME/.local" --strip-components=1
-    rm /tmp/nvim.tar.gz
+    log "Installing Neovim via EPEL..."
+    $SUDO yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+    $SUDO yum install -y neovim python3-neovim
 else
     log "Neovim already installed."
 fi
@@ -192,6 +190,10 @@ fi
 
 # Standard Configs
 link_config "$DOTFILES_DIR/bat"    "$HOME/.config/bat"
+if command -v bat &>/dev/null; then
+    log "Building bat cache..."
+    bat cache --build
+fi
 link_config "$DOTFILES_DIR/zellij" "$HOME/.config/zellij"
 link_config "$DOTFILES_DIR/gemini" "$HOME/.config/gemini"
 
