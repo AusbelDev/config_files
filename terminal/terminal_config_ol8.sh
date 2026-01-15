@@ -90,7 +90,7 @@ add_zshrc_once 'export PATH="$HOME/.local/bin:$PATH"'
 # --- Neovim (Latest Stable) ---
 if ! command -v nvim &>/dev/null; then
     log "Installing Neovim (latest stable)..."
-    NVIM_URL="https://github.com/neovim/neovim/releases/download/stable/nvim-linux64.tar.gz"
+    NVIM_URL="https://github.com/neovim/neovim/releases/download/nightly/nvim-linux-x86_64.tar.gz"
     curl -fLo /tmp/nvim.tar.gz "$NVIM_URL"
     tar xzf /tmp/nvim.tar.gz -C "$HOME/.local" --strip-components=1
     rm /tmp/nvim.tar.gz
