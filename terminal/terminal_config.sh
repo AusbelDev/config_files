@@ -331,8 +331,8 @@ fi
 # Aliases
 add_zshrc_once 'alias clr="clear"'
 add_zshrc_once 'alias py="python3"'
-add_zshrc_once 'alias ls="lsd --group-directories-first -a"'
-add_zshrc_once 'alias ll="lsd -la --group-directories-first --git"'
+add_zshrc_once 'alias ls="lsd --group-directories-first -A"'
+add_zshrc_once 'alias ll="lsd -lA --group-directories-first --git"'
 add_zshrc_once 'alias lt="lsd -l --group-directories-first --tree --depth=2 --git"'
 add_zshrc_once 'alias gs="git status"'
 add_zshrc_once 'alias gcam="git commit -am"'
