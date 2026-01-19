@@ -93,7 +93,6 @@ if ! command -v nvim &>/dev/null; then
     $SUDO dnf -y install ninja-build cmake gcc make gettext curl glibc-gconv-extra git
     git clone https://github.com/neovim/neovim && cd neovim && git checkout stable
     make CMAKE_BUILD_TYPE=RelWithDebInfo && $SUDO make install
-    mkdir $HOME/.local/bin
     $SUDO mv /usr/local/bin/nvim $HOME/.local/bin/
 else
     log "Neovim already installed."
