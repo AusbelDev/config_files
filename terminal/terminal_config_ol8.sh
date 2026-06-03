@@ -146,6 +146,15 @@ else
     log "FZF already installed."
 fi
 
+# --- lnav (Log Viewer) ---
+if ! command -v lnav &>/dev/null; then
+    log "Installing lnav..."
+    curl -s https://packagecloud.io/install/repositories/tstack/lnav/script.rpm.sh | $SUDO bash
+    $SUDO dnf install -y lnav
+else
+    log "lnav already installed."
+fi
+
 # 4. Dotfiles Configuration
 # -----------------------------------------------------------------------------
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
