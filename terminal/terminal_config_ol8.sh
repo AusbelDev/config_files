@@ -263,6 +263,17 @@ add_zshrc_once 'alias gsta="git stash apply"'
 add_zshrc_once 'alias gb="git branch"'
 add_zshrc_once 'alias gbr="git branch -r"'
 add_zshrc_once 'alias glog="git log --oneline --graph"'
+add_zshrc_once "alias int-stop='sudo /opt/jeppesen/jcms/etc/atriumctl/init.d/integrator.py stop'"
+add_zshrc_once "alias int-conf='sudo /opt/jeppesen/jcms/etc/atriumctl/init.d/integrator.py configure'"
+add_zshrc_once "alias int-start='sudo /opt/jeppesen/jcms/etc/atriumctl/init.d/integrator.py start'"
+add_zshrc_once "alias int-restart='int-stop && int-conf && int-start'"
+add_zshrc_once "alias amq-stop='sudo /opt/jeppesen/jcms/etc/atriumctl/init.d/broker.py stop'"
+add_zshrc_once "alias amq-start='sudo /opt/jeppesen/jcms/etc/atriumctl/init.d/broker.py start'"
+add_zshrc_once "alias amq-restart='amq-stop && amq-start'"
+add_zshrc_once "alias io-restart=\"sudo cmsshell -c 'sysmondctl restart ioserver_single1 forced=true'\""
+add_zshrc_once "alias io-status=\"sudo cmsshell -c 'sysmondctl status'\""
+add_zshrc_once "alias atrium-refresh='amq-restart && int-restart && io-restart'"
+add_zshrc_once "alias list-dfeeds=\"sudo cmsshell -c 'amqctlpy -b broker1 list -P mekmitasdigoat'\""
 add_zshrc_once 'autoload -Uz compinit && compinit -d "${ZDOTDIR:-$HOME}/.zcompdump"'
 add_zshrc_once 'source ~/.p10k.zsh'
 
