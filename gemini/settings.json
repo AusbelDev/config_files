@@ -1,19 +1,26 @@
 {
-  "security": {
-    "auth": {
-      "selectedType": "oauth-personal"
-    }
+  "general": {
+    "previewFeatures": true
   },
   "mcpServers": {
     "kimAI": {
       "command": "uv",
       "args": [
-	"run",
-	"-m",
+        "run",
+        "-m",
         "kimai.server"
       ],
-      "cwd": "/home/ausbel/mcp-kimai/"
+      "cwd": "{{HOME}}/mcp-kimai/"
     }
+  },
+  "security": {
+    "auth": {
+      "selectedType": "oauth-personal"
+    }
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "python3 {{HOME}}/.antigravity/status.py"
   },
   "ui": {
     "theme": "Atom One",
@@ -22,8 +29,5 @@
     },
     "showMemoryUsage": true,
     "showLineNumbers": true
-  },
-  "general": {
-    "previewFeatures": true
   }
 }

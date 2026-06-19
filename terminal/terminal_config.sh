@@ -24,6 +24,16 @@ error() {
     exit 1
 }
 
+# Parse options
+RUN_FULL_UPGRADE=false
+for arg in "$@"; do
+    case "$arg" in
+        -f|--full)
+            RUN_FULL_UPGRADE=true
+            ;;
+    esac
+done
+
 add_zshrc_once() {
     local zshrc="$HOME/.zshrc"
     [ -f "$zshrc" ] || touch "$zshrc"
@@ -98,7 +108,7 @@ install_package() {
 }
 
 # Update system
-if [ "$IS_CI" = false ]; then
+if [ "$IS_CI" = false ] && [ "$RUN_FULL_UPGRADE" = true ]; then
     log "Updating system..."
     case "$PACKAGE_MANAGER" in
         apt) sudo apt update && sudo apt upgrade -y ;;
@@ -106,6 +116,8 @@ if [ "$IS_CI" = false ]; then
         pacman) sudo pacman -Syu --noconfirm ;;
         brew) brew update && brew upgrade ;;
     esac
+elif [ "$IS_CI" = false ]; then
+    log "Skipping system package updates/upgrades (use --full or -f to update system)"
 fi
 
 # Install Homebrew if using apt (Linux)
@@ -224,6 +236,14 @@ link_config() {
         fi
     fi
     
+    # If destination is a regular file (not a symlink), sync changes back to source
+    if [ -f "$dest" ] && [ ! -L "$dest" ]; then
+        if ! cmp -s "$dest" "$src"; then
+            log "Syncing modified file content from $dest back to $src"
+            cp "$dest" "$src"
+        fi
+    fi
+    
     # Backup if exists (and not the correct link)
     if [ -e "$dest" ] || [ -L "$dest" ]; then
         log "Backing up existing $dest to ${dest}.bak"
@@ -232,6 +252,66 @@ link_config() {
     
     log "Linking $src to $dest"
     ln -s "$src" "$dest"
+}
+
+link_template_config() {
+    local src="$1"
+    local dest="$2"
+    
+    # Check if source exists
+    if [ ! -e "$src" ]; then
+        log "Warning: Source file $src does not exist. Skipping..."
+        return
+    fi
+
+    # Create parent dir if needed
+    mkdir -p "$(dirname "$dest")"
+    
+    # If destination exists, check if we need to sync back changes
+    if [ -f "$dest" ] && [ ! -L "$dest" ]; then
+        # Render src to a temporary file for comparison
+        local temp_rendered
+        temp_rendered=$(mktemp)
+        python3 - "$src" "$temp_rendered" <<'PY'
+import os, sys
+with open(sys.argv[1], 'r') as f:
+    c = f.read()
+c = c.replace('{{HOME}}', os.environ['HOME']).replace('{{USER}}', os.environ['USER'])
+with open(sys.argv[2], 'w') as f:
+    f.write(c)
+PY
+
+        if ! cmp -s "$dest" "$temp_rendered"; then
+            log "Syncing modified template config from $dest back to $src"
+            # Collapse actual home/user back to placeholders
+            python3 - "$dest" "$src" <<'PY'
+import os, sys
+with open(sys.argv[1], 'r') as f:
+    c = f.read()
+c = c.replace(os.environ['HOME'], '{{HOME}}').replace(os.environ['USER'], '{{USER}}')
+with open(sys.argv[2], 'w') as f:
+    f.write(c)
+PY
+        fi
+        rm -f "$temp_rendered"
+    fi
+    
+    # Backup if dest exists and is a symlink or directory
+    if [ -L "$dest" ] || [ -d "$dest" ]; then
+        log "Backing up existing $dest to ${dest}.bak"
+        mv "$dest" "${dest}.bak"
+    fi
+    
+    # Render the source template directly to the destination
+    log "Generating config from template $src to $dest"
+    python3 - "$src" "$dest" <<'PY'
+import os, sys
+with open(sys.argv[1], 'r') as f:
+    c = f.read()
+c = c.replace('{{HOME}}', os.environ['HOME']).replace('{{USER}}', os.environ['USER'])
+with open(sys.argv[2], 'w') as f:
+    f.write(c)
+PY
 }
 
 setup_dotfiles() {
@@ -259,8 +339,18 @@ setup_dotfiles() {
     # Standard .config directories
     link_config "$DOTFILES_DIR/bat"    "$HOME/.config/bat"
     link_config "$DOTFILES_DIR/zellij" "$HOME/.config/zellij"
-    link_config "$DOTFILES_DIR/gemini" "$HOME/.config/gemini"
     link_config "$DOTFILES_DIR/git"    "$HOME/.config/git"
+    
+    # Gemini / Agy config linking
+    mkdir -p "$DOTFILES_DIR/gemini/config"
+    mkdir -p "$DOTFILES_DIR/gemini/plugins"
+    link_template_config "$DOTFILES_DIR/gemini/settings.json" "$HOME/.gemini/antigravity-cli/settings.json"
+    link_config "$DOTFILES_DIR/gemini/config"        "$HOME/.gemini/config"
+    link_config "$DOTFILES_DIR/gemini/plugins"       "$HOME/.gemini/antigravity-cli/plugins"
+    
+    if [ -f "$DOTFILES_DIR/gemini/mcp_config.json" ]; then
+        link_template_config "$DOTFILES_DIR/gemini/mcp_config.json" "$HOME/.gemini/antigravity-cli/mcp_config.json"
+    fi
     
     # P10k (usually in home)
     if [ -f "$DOTFILES_DIR/p10k/.p10k.zsh" ]; then
@@ -269,6 +359,65 @@ setup_dotfiles() {
 }
 
 setup_dotfiles
+
+# Setup antigravity statusline
+setup_agy_statusline() {
+    local cache_dir="$HOME/.cache"
+    local statusline_repo="$cache_dir/antigravity-statusline"
+    local statusline_installed_file="$HOME/.antigravity/status.py"
+    
+    mkdir -p "$cache_dir"
+    
+    if [ ! -d "$statusline_repo" ]; then
+        log "Cloning antigravity-statusline..."
+        git clone https://github.com/60ke/antigravity-statusline.git "$statusline_repo"
+        log "Running statusline installer..."
+        (cd "$statusline_repo" && ./install.sh)
+    else
+        log "Checking for antigravity-statusline updates..."
+        (
+            cd "$statusline_repo"
+            if git fetch &>/dev/null; then
+                local local_hash
+                local_hash=$(git rev-parse HEAD)
+                local remote_hash
+                remote_hash=$(git rev-parse @{u} 2>/dev/null || echo "$local_hash")
+                
+                if [ "$local_hash" != "$remote_hash" ] || [ ! -f "$statusline_installed_file" ]; then
+                    log "Updating antigravity-statusline..."
+                    git pull
+                    ./install.sh
+                else
+                    log "Antigravity statusline is up to date"
+                fi
+            else
+                log "Could not fetch statusline updates (offline?). Skipping update check."
+                if [ ! -f "$statusline_installed_file" ]; then
+                    log "Statusline not installed. Attempting installation..."
+                    ./install.sh || log "Warning: statusline installation failed"
+                fi
+            fi
+        )
+    fi
+}
+
+setup_agy_statusline
+
+# Symlink this script to ~/.local/bin/terminal-config
+setup_script_command() {
+    mkdir -p "$HOME/.local/bin"
+    local current_script
+    current_script="$(realpath "${BASH_SOURCE[0]}")"
+    chmod +x "$current_script"
+    if [ ! -L "$HOME/.local/bin/terminal-config" ] || [ "$(readlink "$HOME/.local/bin/terminal-config")" != "$current_script" ]; then
+        log "Linking terminal-config command to ~/.local/bin/terminal-config..."
+        rm -f "$HOME/.local/bin/terminal-config"
+        ln -s "$current_script" "$HOME/.local/bin/terminal-config"
+    fi
+}
+
+setup_script_command
+add_zshrc_once 'export PATH="$HOME/.local/bin:$PATH"'
 
 # History settings
 add_zshrc_once 'HISTFILE=~/.zsh_history'
@@ -348,6 +497,8 @@ add_zshrc_once 'alias gbr="git branch -r"'
 add_zshrc_once 'alias glog="git log --oneline --graph"'
 add_zshrc_once 'autoload -Uz compinit'
 add_zshrc_once 'compinit -d "${ZDOTDIR:-$HOME}/.zcompdump"'
+# Run dotfiles setup one more time to sync any overwritten settings files (e.g. settings.json updated by installers)
+setup_dotfiles
 
 log "Setup complete!"
 if [ "$IS_CI" = false ]; then
