@@ -13,6 +13,7 @@
       "cwd": "{{HOME}}/mcp-kimai/"
     }
   },
+  "model": "Gemini 3.5 Flash (Low)",
   "security": {
     "auth": {
       "selectedType": "oauth-personal"

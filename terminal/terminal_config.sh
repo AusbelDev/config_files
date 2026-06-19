@@ -348,6 +348,19 @@ setup_dotfiles() {
     link_config "$DOTFILES_DIR/gemini/config"        "$HOME/.gemini/config"
     link_config "$DOTFILES_DIR/gemini/plugins"       "$HOME/.gemini/antigravity-cli/plugins"
     
+    # Sync back and template mcp_config.json if it exists locally but not in dotfiles yet
+    if [ -f "$HOME/.gemini/antigravity-cli/mcp_config.json" ] && [ ! -f "$DOTFILES_DIR/gemini/mcp_config.json" ]; then
+        log "Initializing mcp_config.json template in dotfiles from local file..."
+        python3 - "$HOME/.gemini/antigravity-cli/mcp_config.json" "$DOTFILES_DIR/gemini/mcp_config.json" <<'PY'
+import os, sys
+with open(sys.argv[1], 'r') as f:
+    c = f.read()
+c = c.replace(os.environ['HOME'], '{{HOME}}').replace(os.environ['USER'], '{{USER}}')
+with open(sys.argv[2], 'w') as f:
+    f.write(c)
+PY
+    fi
+
     if [ -f "$DOTFILES_DIR/gemini/mcp_config.json" ]; then
         link_template_config "$DOTFILES_DIR/gemini/mcp_config.json" "$HOME/.gemini/antigravity-cli/mcp_config.json"
     fi
