@@ -210,7 +210,8 @@ if ! command -v uv >/dev/null 2>&1; then
 fi
 
 # Dotfiles Setup
-DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REAL_SCRIPT_PATH="$(realpath "${BASH_SOURCE[0]}")"
+DOTFILES_DIR="$(cd "$(dirname "$REAL_SCRIPT_PATH")/.." && pwd)"
 
 link_config() {
     local src="$1"
