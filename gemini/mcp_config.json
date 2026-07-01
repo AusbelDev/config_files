@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "KimAI": {
+      "command": "uv",
+      "args": [
+        "run",
+	"-m",
+	"kimai.server"
+      ],
+	"cwd": "{{HOME}}/projects/mcp-kimai"
+    }
+  }
+}
