@@ -1,34 +1,36 @@
 {
-  "general": {
-    "previewFeatures": true
-  },
-  "mcpServers": {
-    "kimAI": {
-      "command": "uv",
-      "args": [
-        "run",
-        "-m",
-        "kimai.server"
-      ],
-      "cwd": "{{HOME}}/mcp-kimai/"
-    }
-  },
+  "enableTelemetry": false,
   "model": "Gemini 3.5 Flash (Low)",
-  "security": {
-    "auth": {
-      "selectedType": "oauth-personal"
-    }
+  "notifications": true,
+  "permissions": {
+    "allow": [
+      "mcp(kimAI/save_user_profile)",
+      "mcp(kimAI/create_outlook_timesheet)",
+      "mcp(kimAI/kimai_get_user_profile)",
+      "mcp(kimAI/expired_profile_data)",
+      "mcp(kimAI/kimai_list_recent_timesheets)",
+      "mcp(kimAI/get_available_times_in_range)",
+      "mcp(kimAI/get_outlook_events)",
+      "mcp(kimAI/create_timesheets)",
+      "command(git status)",
+      "mcp(kimAI/delete_timesheets)"
+    ]
   },
   "statusLine": {
     "type": "command",
     "command": "python3 {{HOME}}/.antigravity/status.py"
   },
-  "ui": {
-    "theme": "Atom One",
-    "footer": {
-      "hideContextPercentage": false
-    },
-    "showMemoryUsage": true,
-    "showLineNumbers": true
-  }
+  "title": {
+    "type": "command",
+    "command": "~/.gemini/antigravity-cli/title.sh",
+    "enabled": true
+  },
+  "trustedWorkspaces": [
+    "{{HOME}}",
+    "{{HOME}}/LATAM/lan-jta-current-confbox",
+    "{{HOME}}/.gemini",
+    "{{HOME}}/mcp-kimai",
+    "{{HOME}}/config_files/nvim",
+    "{{HOME}}/config_files"
+  ]
 }
