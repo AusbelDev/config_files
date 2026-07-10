@@ -1,20 +1,17 @@
 {
   "enableTelemetry": false,
   "model": "Gemini 3.5 Flash (Low)",
-  "notifications": true,
   "permissions": {
     "allow": [
-      "mcp(kimAI/save_user_profile)",
-      "mcp(kimAI/create_outlook_timesheet)",
-      "mcp(kimAI/kimai_get_user_profile)",
-      "mcp(kimAI/expired_profile_data)",
-      "mcp(kimAI/kimai_list_recent_timesheets)",
-      "mcp(kimAI/get_available_times_in_range)",
-      "mcp(kimAI/get_outlook_events)",
-      "mcp(kimAI/create_timesheets)",
-      "command(git status)",
-      "mcp(kimAI/delete_timesheets)"
+      "mcp(KimAI/*)",
+      "mcp(kimai/*)",
+      "command(find)"
     ]
+  },
+  "security": {
+    "auth": {
+      "selectedType": "oauth-personal"
+    }
   },
   "statusLine": {
     "type": "command",
