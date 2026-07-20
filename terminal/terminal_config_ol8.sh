@@ -155,6 +155,47 @@ else
     log "lnav already installed."
 fi
 
+# --- NVM (Node Version Manager) & Node.js ---
+export NVM_DIR="$HOME/.nvm"
+if [ ! -d "$NVM_DIR" ]; then
+    log "Installing NVM..."
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+else
+    log "NVM already installed."
+fi
+
+# Load NVM for the current session to install Node.js
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+    \. "$NVM_DIR/nvm.sh"
+    log "Installing/updating latest Node LTS version..."
+    nvm install --lts
+    nvm use --lts
+    nvm alias default 'lts/*'
+
+    # Install Claude Code CLI
+    if ! command -v claude &>/dev/null; then
+        log "Installing Claude Code CLI..."
+	curl -fsSL https://claude.ai/install.sh | bash
+    else
+        log "Claude Code CLI already installed."
+    fi
+
+    # Install Codex CLI
+    if ! command -v codex &>/dev/null; then
+        log "Installing Codex CLI..."
+        curl -fsSL https://chatgpt.com/codex/install.sh | sh
+    else
+        log "Codex CLI already installed."
+    fi
+else
+    error "Failed to locate/load NVM."
+fi
+
+# Ensure NVM config is in .zshrc
+add_zshrc_once 'export NVM_DIR="$HOME/.nvm"'
+add_zshrc_once '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm'
+add_zshrc_once '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion'
+
 # 4. Dotfiles Configuration
 # -----------------------------------------------------------------------------
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
