@@ -188,19 +188,22 @@ Used for creating or managing customer entities.
 ```
 > Returns the saved file path string. The PDF is written to the storage folder — surface this path to the user.
 
-**`send_outlook_email`** — sends a plain email via Microsoft Graph. **No attachment support.**
+**`send_outlook_email`** — sends an email via Microsoft Graph. Supports optional local file attachments and Telegram review.
 
 ```json
 {
   "to_recipients": ["boss@company.com"],   // Required. List of recipient addresses.
   "subject": "Weekly Kimai Hours Report",  // Required string.
-  "body_content": "Hi Boss, total 40h ...", // Required string. Put the hours summary HERE — the PDF cannot be attached.
+  "body_content": "Hi Boss, total 40h ...", // Required string. Put the hours summary HERE inline.
   "body_type": "Text",                      // Optional. "Text" (default) or "HTML".
-  "cc_recipients": ["pm@company.com"]       // Optional. List of CC addresses (maps from report_config.carbon_copy).
+  "cc_recipients": ["pm@company.com"],      // Optional. List of CC addresses (maps from report_config.carbon_copy).
+  "attachments": ["/home/ausbel/Downloads/timesheet-2026-08.pdf"], // Optional list of local file paths.
+  "review": false                           // Optional boolean (default false). If true with attachments, sends to Telegram for confirmation.
 }
 ```
-> [!WARNING]
-> This tool **cannot** attach files. To deliver hours, summarize them in `body_content`; reference the exported PDF by its file path if the user needs the document itself.
+> [!NOTE]
+> When attachments are used, pass the exact local path returned by `kimai_export_timesheet_pdf`. The hours summary should still be included in `body_content` for convenience.
+
 
 ---
 
