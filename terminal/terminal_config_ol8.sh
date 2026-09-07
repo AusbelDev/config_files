@@ -272,18 +272,17 @@ fi
 
 # Configure .zshrc
 add_zshrc_once '[ -f "$HOME/.local/share/zap/zap.zsh" ] && source "$HOME/.local/share/zap/zap.zsh"'
-add_zshrc_once 'eval "$(zoxide init zsh --cmd cd)"'
 
-# Plugins
+# Plugins (fzf-tab must load after supercharge/compinit, syntax-highlighting must load after fzf-tab)
 PLUGINS=(
     'plug "romkatv/powerlevel10k"'
-    'plug "zap-zsh/supercharge"'
     'plug "wintermi/zsh-lsd"'
-    'plug "zsh-users/zsh-syntax-highlighting"'
-    'plug "zsh-users/zsh-history-substring-search"'
+    'plug "zap-zsh/supercharge"'
     'plug "Aloxaf/fzf-tab"'
     'plug "Freed-Wu/fzf-tab-source"'
     'plug "zsh-users/zsh-autosuggestions"'
+    'plug "zsh-users/zsh-syntax-highlighting"'
+    'plug "zsh-users/zsh-history-substring-search"'
 )
 for p in "${PLUGINS[@]}"; do add_zshrc_once "$p"; done
 
@@ -317,5 +316,6 @@ add_zshrc_once "alias atrium-refresh='amq-restart && int-restart && io-restart'"
 add_zshrc_once "alias list-dfeeds=\"sudo cmsshell -c 'amqctlpy -b broker1 list -P mekmitasdigoat'\""
 add_zshrc_once 'autoload -Uz compinit && compinit -d "${ZDOTDIR:-$HOME}/.zcompdump"'
 add_zshrc_once 'source ~/.p10k.zsh'
+add_zshrc_once 'eval "$(zoxide init zsh --cmd cd)"'
 
 log "Setup complete! Please restart your shell or run 'zsh'."

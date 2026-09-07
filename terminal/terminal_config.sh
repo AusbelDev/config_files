@@ -378,24 +378,33 @@ setup_dotfiles
 setup_agy_statusline() {
     local cache_dir="$HOME/.cache"
     local statusline_repo="$cache_dir/antigravity-statusline"
+    local target_repo="https://github.com/AusbelDev/antigravity-statusline.git"
     local statusline_installed_file="$HOME/.antigravity/status.py"
     
     mkdir -p "$cache_dir"
     
     if [ ! -d "$statusline_repo" ]; then
         log "Cloning antigravity-statusline..."
-        git clone https://github.com/AusbelDev/antigravity-statusline.git "$statusline_repo"
+        git clone "$target_repo" "$statusline_repo"
         log "Running statusline installer..."
         (cd "$statusline_repo" && ./install.sh)
     else
         log "Checking for antigravity-statusline updates..."
         (
             cd "$statusline_repo"
-            if git fetch &>/dev/null; then
+            local current_remote
+            current_remote=$(git remote get-url origin 2>/dev/null || echo "")
+            if [ -n "$target_repo" ] && [ "$current_remote" != "$target_repo" ]; then
+                log "Updating statusline remote origin to $target_repo..."
+                git remote set-url origin "$target_repo"
+                git branch -u origin/master master 2>/dev/null || true
+            fi
+
+            if git fetch origin &>/dev/null; then
                 local local_hash
                 local_hash=$(git rev-parse HEAD)
                 local remote_hash
-                remote_hash=$(git rev-parse @{u} 2>/dev/null || echo "$local_hash")
+                remote_hash=$(git rev-parse @{u} 2>/dev/null || git rev-parse origin/master 2>/dev/null || echo "$local_hash")
                 
                 if [ "$local_hash" != "$remote_hash" ] || [ ! -f "$statusline_installed_file" ]; then
                     log "Updating antigravity-statusline..."
@@ -447,18 +456,17 @@ if [ ! -d "$HOME/.local/share/zap" ]; then
     zsh <(curl -s https://raw.githubusercontent.com/zap-zsh/zap/master/install.zsh) --branch release-v1 --keep
 fi
 add_zshrc_once '[ -f "$HOME/.local/share/zap/zap.zsh" ] && source "$HOME/.local/share/zap/zap.zsh"'
-add_zshrc_once 'eval "$(zoxide init zsh --cmd cd)"'
-# Zap plugins
+# Zap plugins (fzf-tab must load after supercharge/compinit, syntax-highlighting must load after fzf-tab)
 PLUGINS=(
     'plug "romkatv/powerlevel10k"'
-    'plug "zap-zsh/supercharge"'
     'plug "wintermi/zsh-lsd"'
-    'plug "zsh-users/zsh-syntax-highlighting"'
-    'plug "zsh-users/zsh-history-substring-search"'
+    'plug "wintermi/zsh-brew"'
+    'plug "zap-zsh/supercharge"'
     'plug "Aloxaf/fzf-tab"'
     'plug "Freed-Wu/fzf-tab-source"'
     'plug "zsh-users/zsh-autosuggestions"'
-    'plug "wintermi/zsh-brew"'
+    'plug "zsh-users/zsh-syntax-highlighting"'
+    'plug "zsh-users/zsh-history-substring-search"'
 )
 for p in "${PLUGINS[@]}"; do add_zshrc_once "$p"; done
 
@@ -509,8 +517,8 @@ add_zshrc_once 'alias gsta="git stash apply"'
 add_zshrc_once 'alias gb="git branch"'
 add_zshrc_once 'alias gbr="git branch -r"'
 add_zshrc_once 'alias glog="git log --oneline --graph"'
-add_zshrc_once 'autoload -Uz compinit'
-add_zshrc_once 'compinit -d "${ZDOTDIR:-$HOME}/.zcompdump"'
+# Zoxide initialization (must run at the very end after completion setup)
+add_zshrc_once 'eval "$(zoxide init zsh --cmd cd)"'
 # Run dotfiles setup one more time to sync any overwritten settings files (e.g. settings.json updated by installers)
 setup_dotfiles
 
