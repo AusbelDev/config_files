@@ -384,7 +384,7 @@ setup_agy_statusline() {
     
     if [ ! -d "$statusline_repo" ]; then
         log "Cloning antigravity-statusline..."
-        git clone https://github.com/60ke/antigravity-statusline.git "$statusline_repo"
+        git clone https://github.com/AusbelDev/antigravity-statusline.git "$statusline_repo"
         log "Running statusline installer..."
         (cd "$statusline_repo" && ./install.sh)
     else

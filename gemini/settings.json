@@ -1,11 +1,27 @@
 {
-  "enableTelemetry": false,
-  "model": "Gemini 3.5 Flash (Low)",
+  "general": {
+    "previewFeatures": true
+  },
+  "mcpServers": {
+    "kimAI": {
+      "command": "uv",
+      "args": [
+        "run",
+        "-m",
+        "kimai.server"
+      ],
+      "cwd": "/home/ausbel/mcp-kimai/"
+    }
+  },
+  "model": "Gemini 3.8 Flash (High)",
   "permissions": {
     "allow": [
       "mcp(KimAI/*)",
       "mcp(kimai/*)",
-      "command(find)"
+      "command(find)",
+      "command(git diff)",
+      "command(uv run pytest)",
+      "command(git status)"
     ]
   },
   "security": {
@@ -15,19 +31,21 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "python3 {{HOME}}/.antigravity/status.py"
-  },
-  "title": {
-    "type": "command",
-    "command": "~/.gemini/antigravity-cli/title.sh",
-    "enabled": true
+    "command": "python3 /home/ausbel/.antigravity/status.py"
   },
   "trustedWorkspaces": [
-    "{{HOME}}",
-    "{{HOME}}/LATAM/lan-jta-current-confbox",
-    "{{HOME}}/.gemini",
-    "{{HOME}}/mcp-kimai",
-    "{{HOME}}/config_files/nvim",
-    "{{HOME}}/config_files"
-  ]
+    "/home/ausbel",
+    "/home/ausbel/config_files",
+    "/home/ausbel/projects/mcp-kimai",
+    "/home/ausbel/config_files/terminal",
+    "/home/ausbel/qmk_firmware/keyboards/sofle/keymaps"
+  ],
+  "ui": {
+    "theme": "Atom One",
+    "footer": {
+      "hideContextPercentage": false
+    },
+    "showMemoryUsage": true,
+    "showLineNumbers": true
+  }
 }

@@ -60,7 +60,7 @@ The `gemini/plugins/` directory is linked directly to `~/.gemini/antigravity-cli
 * Any namespaced plugin bundles (containing `plugin.json`, hooks, skills, and tools) can be stored here for portability.
 
 ### 4. Status Line Integration
-The script automatically configures the [antigravity-statusline](https://github.com/60ke/antigravity-statusline.git) plugin. It tracks the upstream repository in `~/.cache/antigravity-statusline` and performs automatic updates and installations dynamically.
+The script automatically configures the [antigravity-statusline](https://github.com/AusbelDev/antigravity-statusline.git) plugin. It tracks the repository in `~/.cache/antigravity-statusline` and performs automatic updates and installations dynamically.
 
 ---
 
