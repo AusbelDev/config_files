@@ -70,6 +70,11 @@ if command -v dnf &>/dev/null; then
     $SUDO dnf install -y "${REQUIRED_PKGS[@]}"
 fi
 
+if ! rpm -q libatomic >/dev/null 2>&1; then
+    log "Installing libatomic..."
+    $SUDO dnf install -y libatomic
+fi
+
 # Fix Locales (Common issue in minimal docker containers)
 if command -v localedef &>/dev/null; then
     log "Generating locales..."
