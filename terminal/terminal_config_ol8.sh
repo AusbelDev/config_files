@@ -160,6 +160,29 @@ else
     log "lnav already installed."
 fi
 
+# --- Zellij (Terminal Multiplexer) ---
+if ! command -v zellij &>/dev/null; then
+    log "Installing Zellij..."
+    ARCH="$(uname -m)"
+    case "$ARCH" in
+        x86_64|aarch64)
+            ZELLIJ_URL="https://github.com/zellij-org/zellij/releases/latest/download/zellij-${ARCH}-unknown-linux-musl.tar.gz"
+            ;;
+        *)
+            error "Unsupported architecture for Zellij: $ARCH"
+            ;;
+    esac
+
+    ZELLIJ_TMP="$(mktemp -d)"
+    curl -fLo "$ZELLIJ_TMP/zellij.tar.gz" "$ZELLIJ_URL"
+    tar xzf "$ZELLIJ_TMP/zellij.tar.gz" -C "$ZELLIJ_TMP"
+    chmod +x "$ZELLIJ_TMP/zellij"
+    mv "$ZELLIJ_TMP/zellij" "$BIN_DIR/"
+    rm -rf "$ZELLIJ_TMP"
+else
+    log "Zellij already installed."
+fi
+
 # --- NVM (Node Version Manager) & Node.js ---
 set +u
 export NVM_DIR="$HOME/.nvm"
