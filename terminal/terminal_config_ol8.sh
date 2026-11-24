@@ -225,7 +225,7 @@ if [ ! -d "$HOME/.atlassian-dc-mcp" ]; then
 	log "Installing Atlassian mcp..."
 	npx @atlassian-dc-mcp/jira setup --non-interactive --host jira.jeppesensystems.com --token "$JIRA_TOKEN"
 	# Install atlassian mcp in codex and claude
-	claude mcp add-json atlassian-jira-dc '{"command":"npx","args":["-y","@atlassian-dc-mcp/jira"]}'
+	claude mcp add-json atlassian-jira-dc '{"command":"npx","args":["-y","@atlassian-dc-mcp/jira"]}' --scope user
 	codex mcp add atlassian-jira-dc -- npx -y @atlassian-dc-mcp/jira
 else
 	log "Atlassian mcp already installed"
