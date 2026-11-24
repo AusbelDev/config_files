@@ -156,6 +156,7 @@ else
 fi
 
 # --- NVM (Node Version Manager) & Node.js ---
+set +u
 export NVM_DIR="$HOME/.nvm"
 if [ ! -d "$NVM_DIR" ]; then
     log "Installing NVM..."
@@ -206,7 +207,7 @@ fi
 add_zshrc_once 'export NVM_DIR="$HOME/.nvm"'
 add_zshrc_once '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm'
 add_zshrc_once '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion'
-
+set -u
 # 4. Dotfiles Configuration
 # -----------------------------------------------------------------------------
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
