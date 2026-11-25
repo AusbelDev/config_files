@@ -7,6 +7,7 @@ NVIM_VERSION="${NVIM_VERSION:-stable}"
 BAT_VERSION="${BAT_VERSION:-0.24.0}"
 LSD_VERSION="${LSD_VERSION:-1.1.2}"
 NVM_VERSION="${NVM_VERSION:-0.40.1}"
+JIRA_HOST="${JIRA_HOST:-jira.jeppesensystems.com}"
 
 # Colors
 GREEN="\e[32m"
@@ -34,7 +35,7 @@ Usage: $(basename "$0") [OPTIONS]
 Options:
   --no-nvim    Skip Neovim installation and configuration
   --no-node    Skip NVM and Node.js installation
-  --no-ai      Skip Claude Code and Codex CLI installation
+  --no-ai      Skip Claude Code, Codex CLI, and Atlassian Jira MCP installation
   -h, --help   Show this help message
 
 Environment variables:
@@ -42,6 +43,8 @@ Environment variables:
   BAT_VERSION  (default: ${BAT_VERSION})
   LSD_VERSION  (default: ${LSD_VERSION})
   NVM_VERSION  (default: ${NVM_VERSION})
+  JIRA_HOST    (default: ${JIRA_HOST})
+  JIRA_TOKEN   (optional; required to configure Atlassian Jira MCP)
 EOF
 }
 
@@ -132,9 +135,10 @@ fi
 
 # util-linux-user is needed for 'chsh'
 # glibc-langpack-en is needed for locales in minimal containers
+# libatomic is needed by Node.js / native tooling on OL8
 REQUIRED_PKGS=(
     zsh git curl unzip tar
-    util-linux-user glibc-langpack-en
+    util-linux-user glibc-langpack-en libatomic
     gcc make
     ripgrep fd-find fontconfig
 )
@@ -249,6 +253,20 @@ else
     log "lnav already installed."
 fi
 
+# --- Zellij (Terminal Multiplexer) ---
+if ! command -v zellij &>/dev/null; then
+    log "Installing Zellij (${MUSL_ARCH})..."
+    ZELLIJ_URL="https://github.com/zellij-org/zellij/releases/latest/download/zellij-${MUSL_ARCH}-unknown-linux-musl.tar.gz"
+    ZELLIJ_TMP="$TMP_DIR/zellij"
+    mkdir -p "$ZELLIJ_TMP"
+    curl -fsSL -o "$ZELLIJ_TMP/zellij.tar.gz" "$ZELLIJ_URL"
+    tar xzf "$ZELLIJ_TMP/zellij.tar.gz" -C "$ZELLIJ_TMP"
+    chmod +x "$ZELLIJ_TMP/zellij"
+    mv "$ZELLIJ_TMP/zellij" "$BIN_DIR/"
+else
+    log "Zellij already installed."
+fi
+
 # --- NVM (Node Version Manager) & Node.js ---
 export NVM_DIR="$HOME/.nvm"
 if [ "$INSTALL_NODE" = true ]; then
@@ -280,7 +298,7 @@ else
     info "Skipping NVM and Node.js installation (--no-node)."
 fi
 
-# --- AI CLIs (Claude Code & Codex) ---
+# --- AI CLIs (Claude Code, Codex & Atlassian Jira MCP) ---
 if [ "$INSTALL_AI" = true ]; then
     if ! command -v claude &>/dev/null; then
         log "Installing Claude Code CLI..."
@@ -295,8 +313,28 @@ if [ "$INSTALL_AI" = true ]; then
     else
         log "Codex CLI already installed."
     fi
+
+    # Install Atlassian Jira MCP
+    if [ ! -d "$HOME/.atlassian-dc-mcp" ]; then
+        if ! command -v npx &>/dev/null; then
+            info "npx not available; skipping Atlassian Jira MCP installation."
+        elif [ -z "${JIRA_TOKEN:-}" ]; then
+            info "JIRA_TOKEN not set; skipping Atlassian Jira MCP installation."
+        else
+            log "Installing Atlassian Jira MCP..."
+            npx -y @atlassian-dc-mcp/jira setup --non-interactive --host "$JIRA_HOST" --token "$JIRA_TOKEN"
+            if command -v claude &>/dev/null; then
+                claude mcp add-json atlassian-jira-dc '{"command":"npx","args":["-y","@atlassian-dc-mcp/jira"]}' --scope user
+            fi
+            if command -v codex &>/dev/null; then
+                codex mcp add atlassian-jira-dc -- npx -y @atlassian-dc-mcp/jira
+            fi
+        fi
+    else
+        log "Atlassian Jira MCP already installed."
+    fi
 else
-    info "Skipping AI CLI installations (--no-ai)."
+    info "Skipping AI CLI and MCP installations (--no-ai)."
 fi
 
 # 4. Dotfiles Configuration
