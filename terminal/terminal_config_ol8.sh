@@ -327,7 +327,7 @@ if [ "$INSTALL_AI" = true ]; then
 
     if ! command -v codex &>/dev/null; then
         log "Installing Codex CLI..."
-        curl -fsSL https://chatgpt.com/codex/install.sh | sh
+        curl -fsSL https://chatgpt.com/codex/install.sh | CODEX_NON_INTERACTIVE=1 sh
     else
         log "Codex CLI already installed."
     fi
