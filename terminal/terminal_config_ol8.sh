@@ -123,11 +123,17 @@ fi
 # -----------------------------------------------------------------------------
 log "Installing system dependencies..."
 
-# Enable EPEL (Oracle Linux 8 ships oracle-epel-release-el8)
-if ! rpm -q epel-release >/dev/null 2>&1 && ! rpm -q oracle-epel-release-el8 >/dev/null 2>&1; then
+# Enable EPEL (Oracle Linux ships oracle-epel-release-el<major>)
+EL_MAJOR=""
+if [ -r /etc/os-release ]; then
+    EL_MAJOR="$(. /etc/os-release && v="${VERSION_ID:-}" && printf '%s' "${v%%.*}")"
+fi
+ORACLE_EPEL_PKG="oracle-epel-release-el${EL_MAJOR:-8}"
+
+if ! rpm -q epel-release >/dev/null 2>&1 && ! rpm -q "$ORACLE_EPEL_PKG" >/dev/null 2>&1; then
     log "Enabling EPEL repository..."
     if [ -f /etc/oracle-release ]; then
-        $SUDO dnf install -y oracle-epel-release-el8 || $SUDO dnf install -y epel-release
+        $SUDO dnf install -y "$ORACLE_EPEL_PKG" || $SUDO dnf install -y epel-release
     else
         $SUDO dnf install -y epel-release
     fi
@@ -279,18 +285,30 @@ if [ "$INSTALL_NODE" = true ]; then
 
     # Load NVM for the current session to ensure Node LTS is installed
     if [ -s "$NVM_DIR/nvm.sh" ]; then
-        set +u
+        # nvm is not compatible with errexit/nounset/pipefail
+        set +euo pipefail
         # shellcheck source=/dev/null
-        \. "$NVM_DIR/nvm.sh"
-        if [ "$(nvm version 'lts/*' 2>/dev/null || echo 'N/A')" = "N/A" ]; then
-            log "Installing latest Node LTS version..."
-            nvm install --lts
-            nvm alias default 'lts/*'
-        else
-            log "Node LTS already installed ($(nvm version 'lts/*'))."
+        \. "$NVM_DIR/nvm.sh" --no-use
+        if [ $? -ne 0 ]; then
+            set -euo pipefail
+            error "Failed to load NVM."
         fi
-        nvm use --lts
-        set -u
+        LTS_VERSION="$(nvm version 'lts/*' 2>/dev/null)"
+        if [ -z "$LTS_VERSION" ] || [ "$LTS_VERSION" = "N/A" ]; then
+            log "Installing latest Node LTS version..."
+            if ! nvm install --lts; then
+                set -euo pipefail
+                error "Failed to install Node LTS via NVM."
+            fi
+            nvm alias default 'lts/*' || true
+        else
+            log "Node LTS already installed ($LTS_VERSION)."
+        fi
+        if ! nvm use --lts; then
+            set -euo pipefail
+            error "Failed to activate Node LTS via NVM."
+        fi
+        set -euo pipefail
     else
         error "Failed to locate/load NVM."
     fi
