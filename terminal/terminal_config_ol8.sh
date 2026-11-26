@@ -6,6 +6,7 @@ set -euo pipefail
 NVIM_VERSION="${NVIM_VERSION:-stable}"
 BAT_VERSION="${BAT_VERSION:-0.24.0}"
 LSD_VERSION="${LSD_VERSION:-1.1.2}"
+DELTA_VERSION="${DELTA_VERSION:-0.22.0}"
 NVM_VERSION="${NVM_VERSION:-0.40.1}"
 JIRA_HOST="${JIRA_HOST:-jira.jeppesensystems.com}"
 
@@ -39,12 +40,13 @@ Options:
   -h, --help   Show this help message
 
 Environment variables:
-  NVIM_VERSION (default: ${NVIM_VERSION})
-  BAT_VERSION  (default: ${BAT_VERSION})
-  LSD_VERSION  (default: ${LSD_VERSION})
-  NVM_VERSION  (default: ${NVM_VERSION})
-  JIRA_HOST    (default: ${JIRA_HOST})
-  JIRA_TOKEN   (optional; required to configure Atlassian Jira MCP)
+  NVIM_VERSION  (default: ${NVIM_VERSION})
+  BAT_VERSION   (default: ${BAT_VERSION})
+  LSD_VERSION   (default: ${LSD_VERSION})
+  DELTA_VERSION (default: ${DELTA_VERSION})
+  NVM_VERSION   (default: ${NVM_VERSION})
+  JIRA_HOST     (default: ${JIRA_HOST})
+  JIRA_TOKEN    (optional; required to configure Atlassian Jira MCP)
 EOF
 }
 
@@ -93,10 +95,12 @@ case "$ARCH" in
     x86_64)
         MUSL_ARCH="x86_64"
         NVIM_ARCH="x86_64"
+        DELTA_TARGET="x86_64-unknown-linux-musl"
         ;;
     aarch64|arm64)
         MUSL_ARCH="aarch64"
         NVIM_ARCH="arm64"
+        DELTA_TARGET="aarch64-unknown-linux-gnu"
         ;;
     *)
         error "Unsupported architecture: $ARCH"
@@ -231,6 +235,20 @@ if ! command -v lsd &>/dev/null; then
     mv "$TMP_DIR/lsd-v${LSD_VERSION}-${MUSL_ARCH}-unknown-linux-musl/lsd" "$BIN_DIR/"
 else
     log "LSD already installed."
+fi
+
+# --- Delta (Git Diff Pager) ---
+if ! command -v delta &>/dev/null; then
+    log "Installing git-delta ${DELTA_VERSION} (${DELTA_TARGET})..."
+    DELTA_DIR="delta-${DELTA_VERSION}-${DELTA_TARGET}"
+    DELTA_TAR="${DELTA_DIR}.tar.gz"
+    DELTA_URL="https://github.com/dandavison/delta/releases/download/${DELTA_VERSION}/${DELTA_TAR}"
+
+    curl -fsSL -o "$TMP_DIR/$DELTA_TAR" "$DELTA_URL"
+    tar xzf "$TMP_DIR/$DELTA_TAR" -C "$TMP_DIR"
+    mv "$TMP_DIR/${DELTA_DIR}/delta" "$BIN_DIR/"
+else
+    log "git-delta already installed."
 fi
 
 # --- Zoxide (Smarter cd) ---
